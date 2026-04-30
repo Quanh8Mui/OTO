@@ -1,11 +1,19 @@
 import { Link } from 'react-router-dom'
-
-const today = [
-  { time: '08:30', plate: '51A-12345', job: 'BD 40k', bay: 'Pit 2', status: 'Đang làm' },
-  { time: '10:00', plate: '59C-77889', job: 'Thay má phanh', bay: 'Nâng 1', status: 'Chờ phụ tùng' },
-]
+import { useEffect, useMemo, useState } from 'react'
+import { api, type RepairOrder } from '../../lib/api'
 
 export function StaffDashboard() {
+  const [orders, setOrders] = useState<RepairOrder[]>([])
+
+  useEffect(() => {
+    api.staff.repairOrders().then(setOrders).catch(() => {})
+  }, [])
+
+  const inProgress = useMemo(
+    () => orders.filter((x) => ['INTAKE', 'QUOTING', 'AWAITING_APPROVAL', 'IN_PROGRESS', 'PAUSED'].includes(x.status)),
+    [orders],
+  )
+
   return (
     <div className="page">
       <h1 className="page-title">Xưởng hôm nay</h1>
@@ -15,19 +23,19 @@ export function StaffDashboard() {
         <div className="card">
           <div className="stat">
             <span className="stat-label">Xe trong xưởng</span>
-            <span className="stat-value">7</span>
+            <span className="stat-value">{inProgress.length}</span>
           </div>
         </div>
         <div className="card">
           <div className="stat">
             <span className="stat-label">Báo giá chờ KH</span>
-            <span className="stat-value">3</span>
+            <span className="stat-value">{orders.filter((x) => x.status === 'AWAITING_APPROVAL').length}</span>
           </div>
         </div>
         <div className="card">
           <div className="stat">
             <span className="stat-label">Yêu cầu kho mới</span>
-            <span className="stat-value">2</span>
+            <span className="stat-value">-</span>
           </div>
         </div>
       </div>
@@ -51,12 +59,12 @@ export function StaffDashboard() {
             </tr>
           </thead>
           <tbody>
-            {today.map((r) => (
-              <tr key={r.plate + r.time}>
-                <td style={{ fontFamily: 'var(--font-mono)' }}>{r.time}</td>
-                <td>{r.plate}</td>
-                <td>{r.job}</td>
-                <td>{r.bay}</td>
+            {orders.map((r, index) => (
+              <tr key={r.id}>
+                <td style={{ fontFamily: 'var(--font-mono)' }}>{`0${8 + index}:00`}</td>
+                <td>{r.licensePlate}</td>
+                <td>{r.orderNumber}</td>
+                <td>{r.assignedStaffName ?? '-'}</td>
                 <td>
                   <span className="badge badge-blue">{r.status}</span>
                 </td>

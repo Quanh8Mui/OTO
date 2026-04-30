@@ -1,4 +1,22 @@
+import { useEffect, useState } from 'react'
+import { api, type RevenueReport } from '../../lib/api'
+import { formatDate, formatMoney } from '../../lib/format'
+
 export function RevenueReports() {
+  const today = new Date().toISOString().slice(0, 10)
+  const [from, setFrom] = useState(today)
+  const [to, setTo] = useState(today)
+  const [report, setReport] = useState<RevenueReport | null>(null)
+
+  async function loadReport() {
+    const data = await api.admin.revenue(from, to)
+    setReport(data)
+  }
+
+  useEffect(() => {
+    loadReport().catch(() => {})
+  }, [])
+
   return (
     <div className="page">
       <h1 className="page-title">Báo cáo doanh thu</h1>
@@ -8,11 +26,11 @@ export function RevenueReports() {
         <div className="grid-2">
           <div className="field">
             <label>Từ ngày</label>
-            <input type="date" />
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div className="field">
             <label>Đến ngày</label>
-            <input type="date" />
+            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </div>
         <div className="field">
@@ -27,7 +45,7 @@ export function RevenueReports() {
           <button type="button" className="btn btn-ghost">
             Xuất Excel
           </button>
-          <button type="button" className="btn btn-primary">
+          <button type="button" className="btn btn-primary" onClick={() => loadReport().catch(() => {})}>
             Áp dụng
           </button>
         </div>
@@ -45,20 +63,15 @@ export function RevenueReports() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>21/03/2026</td>
-              <td>14</td>
-              <td>186.000.000 ₫</td>
-              <td>4.000.000 ₫</td>
-              <td>182.000.000 ₫</td>
-            </tr>
-            <tr>
-              <td>20/03/2026</td>
-              <td>11</td>
-              <td>142.500.000 ₫</td>
-              <td>0 ₫</td>
-              <td>142.500.000 ₫</td>
-            </tr>
+            {report ? (
+              <tr>
+                <td>{`${formatDate(report.from)} - ${formatDate(report.to)}`}</td>
+                <td>{report.paymentCount}</td>
+                <td>{formatMoney(report.totalRevenue)}</td>
+                <td>0 ₫</td>
+                <td>{formatMoney(report.totalRevenue)}</td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>

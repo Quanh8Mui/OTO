@@ -1,5 +1,5 @@
 CREATE TABLE users (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   full_name VARCHAR(255) NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE employees (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   employee_code VARCHAR(50) NOT NULL UNIQUE,
   position VARCHAR(100),
@@ -19,7 +19,7 @@ CREATE TABLE employees (
 );
 
 CREATE TABLE vehicles (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   customer_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   license_plate VARCHAR(20) NOT NULL,
   brand VARCHAR(100),
@@ -32,7 +32,7 @@ CREATE TABLE vehicles (
 );
 
 CREATE TABLE service_catalog (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   code VARCHAR(50) NOT NULL UNIQUE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
@@ -42,7 +42,7 @@ CREATE TABLE service_catalog (
 );
 
 CREATE TABLE parts (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   sku VARCHAR(50) NOT NULL UNIQUE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE parts (
 );
 
 CREATE TABLE bookings (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   booking_number VARCHAR(30) NOT NULL UNIQUE,
   customer_id BIGINT NOT NULL REFERENCES users(id),
   vehicle_id BIGINT NOT NULL REFERENCES vehicles(id),
@@ -71,7 +71,7 @@ CREATE TABLE bookings (
 );
 
 CREATE TABLE repair_orders (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   order_number VARCHAR(30) NOT NULL UNIQUE,
   booking_id BIGINT REFERENCES bookings(id),
   customer_id BIGINT NOT NULL REFERENCES users(id),
@@ -85,7 +85,7 @@ CREATE TABLE repair_orders (
 );
 
 CREATE TABLE repair_progress_events (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   repair_order_id BIGINT NOT NULL REFERENCES repair_orders(id) ON DELETE CASCADE,
   message TEXT NOT NULL,
   step_label VARCHAR(100),
@@ -94,7 +94,7 @@ CREATE TABLE repair_progress_events (
 );
 
 CREATE TABLE quotes (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   quote_number VARCHAR(30) NOT NULL UNIQUE,
   repair_order_id BIGINT NOT NULL REFERENCES repair_orders(id) ON DELETE CASCADE,
   version INT NOT NULL DEFAULT 1,
@@ -114,7 +114,7 @@ CREATE TABLE quotes (
 );
 
 CREATE TABLE quote_lines (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   quote_id BIGINT NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
   line_type VARCHAR(10) NOT NULL CHECK (line_type IN ('LABOR', 'PART')),
   service_catalog_id BIGINT REFERENCES service_catalog(id),
@@ -126,7 +126,7 @@ CREATE TABLE quote_lines (
 );
 
 CREATE TABLE parts_requests (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   request_number VARCHAR(30) NOT NULL UNIQUE,
   repair_order_id BIGINT NOT NULL REFERENCES repair_orders(id),
   requested_by_staff_id BIGINT NOT NULL REFERENCES users(id),
@@ -137,7 +137,7 @@ CREATE TABLE parts_requests (
 );
 
 CREATE TABLE parts_request_lines (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   parts_request_id BIGINT NOT NULL REFERENCES parts_requests(id) ON DELETE CASCADE,
   part_id BIGINT NOT NULL REFERENCES parts(id),
   quantity_requested INT NOT NULL,
@@ -145,7 +145,7 @@ CREATE TABLE parts_request_lines (
 );
 
 CREATE TABLE payments (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   payment_number VARCHAR(30) NOT NULL UNIQUE,
   repair_order_id BIGINT NOT NULL REFERENCES repair_orders(id),
   quote_id BIGINT REFERENCES quotes(id),
@@ -158,7 +158,7 @@ CREATE TABLE payments (
 );
 
 CREATE TABLE service_ratings (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   repair_order_id BIGINT NOT NULL UNIQUE REFERENCES repair_orders(id),
   customer_id BIGINT NOT NULL REFERENCES users(id),
   rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
@@ -167,7 +167,7 @@ CREATE TABLE service_ratings (
 );
 
 CREATE TABLE staff_schedules (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   staff_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   day_of_week INT NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
   start_time TIME NOT NULL,
@@ -176,7 +176,7 @@ CREATE TABLE staff_schedules (
 );
 
 CREATE TABLE notification_settings (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   event_key VARCHAR(64) NOT NULL UNIQUE,
   enabled BOOLEAN NOT NULL DEFAULT TRUE,
   channel VARCHAR(20) NOT NULL DEFAULT 'EMAIL',
@@ -185,7 +185,7 @@ CREATE TABLE notification_settings (
 );
 
 CREATE TABLE notifications (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   event_type VARCHAR(64) NOT NULL,
   title VARCHAR(255) NOT NULL,

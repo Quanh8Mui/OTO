@@ -1,10 +1,13 @@
-const rows = [
-  { date: '15/03/2026', vehicle: '51A-12345 · Camry', service: 'BD 40.000 km', amount: '4.200.000 ₫', status: 'Hoàn tất' },
-  { date: '02/12/2025', vehicle: '51A-12345 · Camry', service: 'Thay lốp + cân chỉnh', amount: '3.100.000 ₫', status: 'Hoàn tất' },
-  { date: '18/08/2025', vehicle: '51B-99999 · Fortuner', service: 'Kiểm tra điều hoà', amount: '850.000 ₫', status: 'Hoàn tất' },
-]
+import { useEffect, useState } from 'react'
+import { api, type RepairOrder } from '../../lib/api'
 
 export function ServiceHistory() {
+  const [orders, setOrders] = useState<RepairOrder[]>([])
+
+  useEffect(() => {
+    api.customer.repairOrders().then(setOrders).catch(() => {})
+  }, [])
+
   return (
     <div className="page">
       <h1 className="page-title">Lịch sử bảo dưỡng / sửa chữa</h1>
@@ -33,12 +36,12 @@ export function ServiceHistory() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.date + r.service}>
-                <td>{r.date}</td>
-                <td>{r.vehicle}</td>
-                <td>{r.service}</td>
-                <td style={{ fontFamily: 'var(--font-mono)' }}>{r.amount}</td>
+            {orders.map((r) => (
+              <tr key={r.id}>
+                <td>-</td>
+                <td>{r.licensePlate}</td>
+                <td>{r.orderNumber}</td>
+                <td style={{ fontFamily: 'var(--font-mono)' }}>-</td>
                 <td>
                   <span className="badge badge-green">{r.status}</span>
                 </td>

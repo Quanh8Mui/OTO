@@ -1,4 +1,14 @@
+import { useEffect, useState } from 'react'
+import { api, type DashboardResponse } from '../../lib/api'
+import { formatMoney } from '../../lib/format'
+
 export function AdminDashboard() {
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
+
+  useEffect(() => {
+    api.admin.dashboard().then(setDashboard).catch(() => {})
+  }, [])
+
   return (
     <div className="page">
       <h1 className="page-title">Dashboard tổng quan</h1>
@@ -8,21 +18,23 @@ export function AdminDashboard() {
         <div className="card">
           <div className="stat">
             <span className="stat-label">Doanh thu tháng 3</span>
-            <span className="stat-value">1,28 tỷ ₫</span>
+            <span className="stat-value">{formatMoney(dashboard?.revenueToday)}</span>
             <span className="muted">+8% so với tháng trước</span>
           </div>
         </div>
         <div className="card">
           <div className="stat">
             <span className="stat-label">RO đang mở</span>
-            <span className="stat-value">24</span>
+            <span className="stat-value">
+              {Object.entries(dashboard?.ordersByStatus ?? {}).reduce((acc, [, n]) => acc + n, 0)}
+            </span>
             <span className="muted">Trung bình 2,4h / xe</span>
           </div>
         </div>
         <div className="card">
           <div className="stat">
             <span className="stat-label">Cảnh báo kho</span>
-            <span className="stat-value">5</span>
+            <span className="stat-value">{dashboard?.lowStockPartsCount ?? 0}</span>
             <span className="muted">SKU dưới định mức</span>
           </div>
         </div>
@@ -64,9 +76,11 @@ export function AdminDashboard() {
         <div className="card card-muted">
           <h2 style={{ fontSize: '1rem', margin: '0 0 1rem' }}>Hoạt động gần đây</h2>
           <ul className="stack" style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--text-muted)' }}>
-            <li>Nhân viên Nguyễn A cập nhật RO #0318</li>
-            <li>Xuất kho PR-1042 — má phanh</li>
-            <li>Khách duyệt báo giá Q-0142</li>
+            {Object.entries(dashboard?.ordersByStatus ?? {}).map(([status, total]) => (
+              <li key={status}>
+                {status}: {total}
+              </li>
+            ))}
           </ul>
         </div>
       </div>

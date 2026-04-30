@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RoleLayout, type NavItem } from './components/RoleLayout'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
@@ -61,44 +62,50 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/app/customer"
-          element={
-            <RoleLayout brand="Khách hàng" subtitle="Đặt lịch & theo dõi xe" nav={customerNav} accent="customer" />
-          }
-        >
-          <Route index element={<CustomerDashboard />} />
-          <Route path="book" element={<BookAppointment />} />
-          <Route path="history" element={<ServiceHistory />} />
-          <Route path="status" element={<RepairStatus />} />
-          <Route path="quotes" element={<Quotes />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="rating" element={<ServiceRating />} />
+        <Route element={<ProtectedRoute roles={['CUSTOMER']} />}>
+          <Route
+            path="/app/customer"
+            element={
+              <RoleLayout brand="Khách hàng" subtitle="Đặt lịch & theo dõi xe" nav={customerNav} accent="customer" />
+            }
+          >
+            <Route index element={<CustomerDashboard />} />
+            <Route path="book" element={<BookAppointment />} />
+            <Route path="history" element={<ServiceHistory />} />
+            <Route path="status" element={<RepairStatus />} />
+            <Route path="quotes" element={<Quotes />} />
+            <Route path="payment" element={<Payment />} />
+            <Route path="rating" element={<ServiceRating />} />
+          </Route>
         </Route>
 
-        <Route
-          path="/app/staff"
-          element={<RoleLayout brand="Nhân viên" subtitle="Vận hành xưởng" nav={staffNav} accent="staff" />}
-        >
-          <Route index element={<StaffDashboard />} />
-          <Route path="intake" element={<VehicleIntake />} />
-          <Route path="quote" element={<QuoteBuilder />} />
-          <Route path="progress" element={<RepairProgress />} />
-          <Route path="parts" element={<PartsRequest />} />
-          <Route path="handover" element={<VehicleHandover />} />
-          <Route path="schedule" element={<WorkSchedule />} />
+        <Route element={<ProtectedRoute roles={['STAFF']} />}>
+          <Route
+            path="/app/staff"
+            element={<RoleLayout brand="Nhân viên" subtitle="Vận hành xưởng" nav={staffNav} accent="staff" />}
+          >
+            <Route index element={<StaffDashboard />} />
+            <Route path="intake" element={<VehicleIntake />} />
+            <Route path="quote" element={<QuoteBuilder />} />
+            <Route path="progress" element={<RepairProgress />} />
+            <Route path="parts" element={<PartsRequest />} />
+            <Route path="handover" element={<VehicleHandover />} />
+            <Route path="schedule" element={<WorkSchedule />} />
+          </Route>
         </Route>
 
-        <Route
-          path="/app/admin"
-          element={<RoleLayout brand="Quản trị" subtitle="Cấu hình & báo cáo" nav={adminNav} accent="admin" />}
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="employees" element={<EmployeeManagement />} />
-          <Route path="inventory" element={<PartsInventory />} />
-          <Route path="services" element={<ServiceCatalog />} />
-          <Route path="revenue" element={<RevenueReports />} />
-          <Route path="notifications" element={<NotificationSettings />} />
+        <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+          <Route
+            path="/app/admin"
+            element={<RoleLayout brand="Quản trị" subtitle="Cấu hình & báo cáo" nav={adminNav} accent="admin" />}
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="employees" element={<EmployeeManagement />} />
+            <Route path="inventory" element={<PartsInventory />} />
+            <Route path="services" element={<ServiceCatalog />} />
+            <Route path="revenue" element={<RevenueReports />} />
+            <Route path="notifications" element={<NotificationSettings />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

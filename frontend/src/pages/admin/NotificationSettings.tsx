@@ -1,4 +1,12 @@
+import { useEffect, useState } from 'react'
+import { api, type NotificationSetting } from '../../lib/api'
+
 export function NotificationSettings() {
+  const [settings, setSettings] = useState<NotificationSetting[]>([])
+  useEffect(() => {
+    api.admin.notifications().then(setSettings).catch(() => {})
+  }, [])
+
   return (
     <div className="page">
       <h1 className="page-title">Cấu hình thông báo tự động</h1>
@@ -20,18 +28,10 @@ export function NotificationSettings() {
 
         <h2 style={{ fontSize: '1rem', margin: '0 0 1rem' }}>Sự kiện</h2>
         <div className="stack">
-          {(
-            [
-              ['Đặt lịch thành công', true],
-              ['Có báo giá mới', true],
-              ['Khách duyệt / từ chối BG', true],
-              ['Tiến độ RO thay đổi', false],
-              ['Xe sẵn sàng bàn giao', true],
-            ] as const
-          ).map(([label, on]) => (
-            <div key={label} className="row-between">
-              <span>{label}</span>
-              <input type="checkbox" defaultChecked={on} />
+          {settings.map((s) => (
+            <div key={s.id} className="row-between">
+              <span>{s.eventKey}</span>
+              <input type="checkbox" checked={s.enabled} readOnly />
             </div>
           ))}
         </div>

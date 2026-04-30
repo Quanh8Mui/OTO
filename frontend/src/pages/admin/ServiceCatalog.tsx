@@ -1,10 +1,13 @@
-const services = [
-  { code: 'SVC-BD-10K', name: 'Bảo dưỡng 10.000 km', price: '2.500.000 ₫', cat: 'Định kỳ' },
-  { code: 'SVC-BD-40K', name: 'Bảo dưỡng 40.000 km', price: '4.200.000 ₫', cat: 'Định kỳ' },
-  { code: 'SVC-AC-CHK', name: 'Kiểm tra điều hoà', price: '850.000 ₫', cat: 'Điện / điều hoà' },
-]
+import { useEffect, useState } from 'react'
+import { api, type ServiceItem } from '../../lib/api'
+import { formatMoney } from '../../lib/format'
 
 export function ServiceCatalog() {
+  const [services, setServices] = useState<ServiceItem[]>([])
+  useEffect(() => {
+    api.admin.services().then(setServices).catch(() => {})
+  }, [])
+
   return (
     <div className="page">
       <h1 className="page-title">Danh mục dịch vụ & giá</h1>
@@ -38,8 +41,8 @@ export function ServiceCatalog() {
               <tr key={s.code}>
                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>{s.code}</td>
                 <td>{s.name}</td>
-                <td>{s.price}</td>
-                <td>{s.cat}</td>
+                <td>{formatMoney(s.basePrice)}</td>
+                <td>{s.active ? 'Hoạt động' : 'Tạm dừng'}</td>
                 <td>
                   <button type="button" className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem' }}>
                     Sửa

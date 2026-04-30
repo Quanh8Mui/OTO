@@ -1,4 +1,35 @@
+import { useEffect, useMemo, useState } from 'react'
+import { api, type Payment as PaymentType, type Quote } from '../../lib/api'
+import { formatDate, formatMoney } from '../../lib/format'
+
 export function Payment() {
+  const [payments, setPayments] = useState<PaymentType[]>([])
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [selectedMethod, setSelectedMethod] = useState<PaymentType['method']>('ONLINE')
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    Promise.all([api.customer.payments(), api.customer.quotes()]).then(([p, q]) => {
+      setPayments(p)
+      setQuotes(q)
+    })
+  }, [])
+
+  const pendingQuote = useMemo(() => quotes.find((q) => q.status === 'APPROVED'), [quotes])
+
+  async function payNow() {
+    if (!pendingQuote) return
+    const created = await api.customer.createPayment({
+      repairOrderId: pendingQuote.repairOrderId,
+      quoteId: pendingQuote.id,
+      amount: pendingQuote.grandTotal,
+      method: selectedMethod,
+    })
+    const completed = await api.customer.completePayment(created.id, `SIM-${Date.now()}`)
+    setPayments((prev) => [completed, ...prev])
+    setMessage('Thanh toán thành công.')
+  }
+
   return (
     <div className="page">
       <h1 className="page-title">Thanh toán online</h1>
@@ -13,25 +44,38 @@ export function Payment() {
               <span className="badge badge-amber">Chưa TT</span>
             </div>
             <div className="row-between">
-              <span>Camry · BD 40k km</span>
-              <strong>12.450.000 ₫</strong>
+              <span>{pendingQuote?.quoteNumber ?? 'Không có hóa đơn chờ thanh toán'}</span>
+              <strong>{formatMoney(pendingQuote?.grandTotal)}</strong>
             </div>
-            <button type="button" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ marginTop: '0.5rem' }}
+              onClick={payNow}
+              disabled={!pendingQuote}
+            >
               Thanh toán ngay
             </button>
+            {message ? <div className="muted">{message}</div> : null}
           </div>
         </div>
 
         <div className="card card-muted">
           <h2 style={{ fontSize: '1rem', margin: '0 0 1rem' }}>Phương thức</h2>
           <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-            <input type="radio" name="pay" defaultChecked /> Ví điện tử (MoMo, ZaloPay)
+            <input type="radio" name="pay" checked={selectedMethod === 'ONLINE'} onChange={() => setSelectedMethod('ONLINE')} /> Ví điện tử (MoMo, ZaloPay)
           </label>
           <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-            <input type="radio" name="pay" /> Thẻ ATM / Visa / Mastercard
+            <input type="radio" name="pay" checked={selectedMethod === 'CARD'} onChange={() => setSelectedMethod('CARD')} /> Thẻ ATM / Visa / Mastercard
           </label>
           <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-            <input type="radio" name="pay" /> Chuyển khoản (QR)
+            <input
+              type="radio"
+              name="pay"
+              checked={selectedMethod === 'BANK_TRANSFER'}
+              onChange={() => setSelectedMethod('BANK_TRANSFER')}
+            />{' '}
+            Chuyển khoản (QR)
           </label>
         </div>
       </div>
@@ -48,14 +92,16 @@ export function Payment() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td style={{ fontFamily: 'var(--font-mono)' }}>TXN-99821</td>
-              <td>15/03/2026</td>
-              <td>4.200.000 ₫</td>
-              <td>
-                <span className="badge badge-green">Thành công</span>
-              </td>
-            </tr>
+            {payments.map((p) => (
+              <tr key={p.id}>
+                <td style={{ fontFamily: 'var(--font-mono)' }}>{p.transactionRef ?? p.paymentNumber}</td>
+                <td>{formatDate(p.paidAt ?? p.createdAt)}</td>
+                <td>{formatMoney(p.amount)}</td>
+                <td>
+                  <span className={p.status === 'COMPLETED' ? 'badge badge-green' : 'badge badge-amber'}>{p.status}</span>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

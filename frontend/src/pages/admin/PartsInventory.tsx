@@ -1,10 +1,13 @@
-const parts = [
-  { sku: 'OIL-5W30-4L', name: 'Dầu 5W-30 (4L)', qty: 42, min: 20, loc: 'Kệ A1' },
-  { sku: 'FIL-OEM-001', name: 'Lọc dầu OEM', qty: 8, min: 15, loc: 'Kệ A2' },
-  { sku: 'BRK-F-FD', name: 'Má phanh trước (bộ)', qty: 3, min: 4, loc: 'Kệ C3' },
-]
+import { useEffect, useState } from 'react'
+import { api, type Part } from '../../lib/api'
 
 export function PartsInventory() {
+  const [parts, setParts] = useState<Part[]>([])
+
+  useEffect(() => {
+    api.admin.parts().then(setParts).catch(() => {})
+  }, [])
+
   return (
     <div className="page">
       <h1 className="page-title">Quản lý kho phụ tùng</h1>
@@ -36,11 +39,15 @@ export function PartsInventory() {
               <tr key={p.sku}>
                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>{p.sku}</td>
                 <td>{p.name}</td>
-                <td>{p.qty}</td>
-                <td>{p.min}</td>
-                <td>{p.loc}</td>
+                <td>{p.quantityOnHand}</td>
+                <td>{p.minStock}</td>
+                <td>{p.category ?? '-'}</td>
                 <td>
-                  {p.qty < p.min ? <span className="badge badge-red">Dưới định mức</span> : <span className="badge badge-green">OK</span>}
+                  {p.quantityOnHand < p.minStock ? (
+                    <span className="badge badge-red">Dưới định mức</span>
+                  ) : (
+                    <span className="badge badge-green">OK</span>
+                  )}
                 </td>
               </tr>
             ))}
