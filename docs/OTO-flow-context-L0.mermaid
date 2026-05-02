@@ -1,0 +1,19 @@
+flowchart LR
+  subgraph Actors["Tác nhân"]
+    KH((Khách hàng))
+    NV((Nhân viên<br/>garage))
+    AD((Admin))
+  end
+
+  SYS[Hệ thống OTO<br/>Backend API + DB + Frontend]
+
+  KH -->|Đặt lịch, xem trạng thái,<br/>duyệt báo giá, thanh toán,<br/>đánh giá| SYS
+  SYS -->|Thông báo trạng thái,<br/>báo giá, lịch sử| KH
+
+  NV -->|Tiếp nhận, báo giá,<br/>tiến độ, phiếu kho,<br/>bàn giao| SYS
+  SYS -->|Danh sách đơn, kho<br/>dịch vụ tham chiếu| NV
+
+  AD -->|CRUD nhân viên, kho,<br/>dịch vụ, cấu hình,<br/>duyệt phiếu kho| SYS
+  SYS -->|Dashboard, báo cáo DT| AD
+
+  style SYS fill:#dae8fc,stroke:#6c8ebf

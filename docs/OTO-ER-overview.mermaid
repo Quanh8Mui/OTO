@@ -1,0 +1,83 @@
+%% Tổng quan: các cụm thực thể (context) — dán vào diagrams.net → Insert → Mermaid
+
+flowchart TB
+  subgraph IAM["Nhận diện & phân quyền"]
+    U[User]
+    E[Employee]
+  end
+
+  subgraph CRM["Khách hàng & xe"]
+    V[Vehicle]
+  end
+
+  subgraph CAT["Danh mục & kho"]
+    SC[ServiceCatalogItem]
+    P[Part]
+  end
+
+  subgraph SCH["Lịch hẹn"]
+    B[Booking]
+  end
+
+  subgraph WS["Xưởng sửa"]
+    RO[RepairOrder]
+    RPE[RepairProgressEvent]
+  end
+
+  subgraph Q["Báo giá"]
+    Q1[Quote]
+    QL[QuoteLine]
+  end
+
+  subgraph INV["Phiếu linh kiện"]
+    PR[PartsRequest]
+    PRL[PartsRequestLine]
+  end
+
+  subgraph BILL["Thanh toán & CSAT"]
+    PAY[Payment]
+    SR[ServiceRating]
+  end
+
+  subgraph NS["Thông báo"]
+    NS1[NotificationSetting]
+    N[Notification]
+  end
+
+  subgraph WRK["Lịch nhân viên"]
+    SS[StaffSchedule]
+  end
+
+  E --> U
+  V --> U
+  B --> U
+  B --> V
+  B -.-> SC
+
+  RO -->|customer| U
+  RO --> V
+  RO -.-> B
+  RO -->|assignedStaff| U
+  RPE --> RO
+
+  Q1 --> RO
+  QL --> Q1
+  QL -.-> SC
+  QL -.-> P
+
+  PR --> RO
+  PR --> U
+  PRL --> PR
+  PRL --> P
+
+  PAY --> RO
+  PAY -.-> Q1
+  SR --> RO
+  SR --> U
+
+  SS --> U
+  N --> U
+  NS1 -.-> N
+
+  classDef db fill:#dae8fc,stroke:#6c8ebf;
+  class U,E,V,SC,P,B,RO,RPE,Q1,QL,PR,PRL,PAY,SR,NS1,N,SS db;

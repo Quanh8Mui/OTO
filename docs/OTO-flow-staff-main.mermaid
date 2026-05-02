@@ -1,0 +1,21 @@
+%% Luồng chính — Nhân viên xưởng (happy path)
+
+flowchart TD
+  S([Đăng nhập STAFF]) --> T[JWT]
+  T --> U{Việc tiếp theo}
+
+  U --> V[Xem đơn: GET repair-orders?scope=all hoặc mine]
+  V --> W[Tiếp nhận xe POST .../repair-orders/intake]
+  W --> X[Tạo báo giá nháp POST .../quotes]
+  X --> Y[Ghi dòng báo giá PUT .../quotes/id/lines]
+  Y --> Z[Gửi khách POST .../quotes/id/send]
+  Z --> AA[Cập nhật tiến độ PUT status + POST progress]
+  AA --> AB[Cần phụ tùng?]
+  AB -->|Có| AC[POST .../parts-requests]
+  AB -->|Không| AD[Hoàn thành sửa POST .../complete-work]
+  AC --> AE[Đợi admin duyệt & fulfill kho]
+  AE --> AA
+  AD --> AF[Bàn giao xe POST .../handover]
+
+  style S fill:#fff3cd
+  style AF fill:#d4edda

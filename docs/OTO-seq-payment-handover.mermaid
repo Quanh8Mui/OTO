@@ -1,0 +1,22 @@
+%% Luồng thanh toán & bàn giao (theo logic hiện tại của API)
+
+sequenceDiagram
+  participant KH as Khách
+  participant API as Backend
+  participant NV as Staff
+
+  Note over NV: Đơn đã APPROVED, đang/thành IN_PROGRESS...
+
+  NV->>API: complete-work(repairOrderId)
+  Note over API: RepairOrder COMPLETED
+
+  KH->>API: POST /customer/payments
+  Note over API: Payment PENDING
+  KH->>API: POST /customer/payments/id/complete
+  Note over API: Payment COMPLETED
+
+  NV->>API: handover(repairOrderId)
+  Note over API: RepairOrder DELIVERED
+
+  KH->>API: POST /customer/ratings
+  Note over API: ServiceRating cho repairOrder

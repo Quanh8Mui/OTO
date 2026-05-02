@@ -1,0 +1,15 @@
+%% Luồng: Phiếu lĩnh phụ tùng & Admin xử lý kho
+
+flowchart TD
+  S[Staff tạo PartsRequest] --> P[PENDING]
+  P --> AD{Admin xử lý}
+  AD -->|Đồng ý| A[APPROVED]
+  AD -->|Từ chối| X[REJECTED]
+  A --> F[fulfill: kiểm tra tồn]
+  F --> OK{Đủ hàng?}
+  OK -->|Đủ| M[FULFILLED + trừ quantity_on_hand]
+  OK -->|Thiếu| E[Lỗi / bổ sung kho<br/>offline]
+  M --> S2[Staff tiếp tục sửa xe]
+
+  style M fill:#d4edda
+  style X fill:#f8d7da

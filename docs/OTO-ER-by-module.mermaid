@@ -1,0 +1,35 @@
+%% ER theo module (kiểu chi tiết liên kết) — diagrams.net → Mermaid
+
+erDiagram
+  users ||--o| employees : "profile"
+  users ||--o{ vehicles : "customer"
+  users ||--o{ bookings : "customer"
+  vehicles ||--o{ bookings : "for"
+
+  service_catalog ||--o{ bookings : "optional"
+  users ||--o{ repair_orders : "customer"
+  vehicles ||--o{ repair_orders : "for"
+  bookings ||--o{ repair_orders : "from"
+  users ||--o{ repair_orders : "assigned_staff"
+
+  repair_orders ||--o{ repair_progress_events : ""
+  users ||--o{ repair_progress_events : "created_by"
+
+  repair_orders ||--o{ quotes : ""
+  quotes ||--|{ quote_lines : "composition"
+  service_catalog ||--o{ quote_lines : "ref"
+  parts ||--o{ quote_lines : "ref"
+
+  repair_orders ||--o{ parts_requests : ""
+  users ||--o{ parts_requests : "requested_by"
+  parts_requests ||--|{ parts_request_lines : "composition"
+  parts ||--o{ parts_request_lines : ""
+
+  repair_orders ||--o{ payments : ""
+  quotes ||--o{ payments : "optional"
+
+  repair_orders ||--o| service_ratings : "1 per order"
+  users ||--o{ service_ratings : "customer"
+
+  users ||--o{ staff_schedules : "staff"
+  users ||--o{ notifications : "inbox"

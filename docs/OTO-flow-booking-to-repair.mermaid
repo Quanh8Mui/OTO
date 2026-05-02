@@ -1,0 +1,18 @@
+%% Luồng: Đặt lịch → Tiếp nhận → Đơn sửa
+
+flowchart TD
+  start([Khách đặt lịch]) --> B[Booking PENDING/CONFIRMED]
+  B --> W{Nhân viên tiếp nhận?}
+  W -->|Có| I[POST intake + bookingId?]
+  I --> R[RepairOrder INTAKE]
+  W -->|Chưa| B
+
+  R --> Q[QUOTING: tạo Quote DRAFT]
+  Q --> S[SENT → AWAITING_APPROVAL]
+  S --> D{Khách duyệt?}
+  D -->|OK| IP[IN_PROGRESS]
+  D -->|Reject| Q2[Về QUOTING — sửa báo giá]
+  Q2 --> Q
+
+  style start fill:#e1f5ff
+  style IP fill:#d4edda

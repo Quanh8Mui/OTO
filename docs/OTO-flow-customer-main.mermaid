@@ -1,0 +1,23 @@
+%% Luồng chính — Khách hàng (happy path)
+%% diagrams.net: Insert → Advanced → Mermaid
+
+flowchart TD
+  A([Khách vào web]) --> B{Đã có tài khoản?}
+  B -->|Chưa| C[Đăng ký /api/auth/register]
+  B -->|Rồi| D[Đăng nhập /api/auth/login]
+  C --> D
+  D --> E[Lấy JWT]
+  E --> F[Thêm xe /api/customer/vehicles]
+  F --> G[Đặt lịch /api/customer/bookings]
+  G --> H[Theo dõi repair-orders & progress]
+  H --> I{Nhận báo giá?}
+  I -->|Có| J[Xem quotes]
+  J --> K{Duyệt báo giá?}
+  K -->|Đồng ý| L[POST .../quotes/id/approve]
+  K -->|Từ chối| M[POST .../quotes/id/reject]
+  L --> N[Thanh toán POST .../payments + complete]
+  N --> O[Xe bàn giao]
+  O --> P[Đánh giá POST .../ratings]
+
+  style A fill:#e1f5ff
+  style P fill:#d4edda

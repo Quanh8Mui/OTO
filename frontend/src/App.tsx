@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
 import { RoleLayout, type NavItem } from './components/RoleLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Landing } from './pages/Landing'
@@ -24,6 +25,13 @@ import { PartsInventory } from './pages/admin/PartsInventory'
 import { ServiceCatalog } from './pages/admin/ServiceCatalog'
 import { RevenueReports } from './pages/admin/RevenueReports'
 import { NotificationSettings } from './pages/admin/NotificationSettings'
+
+function SwaggerRedirect() {
+  useEffect(() => {
+    window.location.assign('/swagger-ui/index.html')
+  }, [])
+  return null
+}
 
 const customerNav: NavItem[] = [
   { to: '/app/customer', label: 'Tổng quan', icon: '🏠', end: true },
@@ -58,6 +66,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/swagger" element={<SwaggerRedirect />} />
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

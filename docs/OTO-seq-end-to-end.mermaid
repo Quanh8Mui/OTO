@@ -1,0 +1,43 @@
+%% Biểu đồ tuần tự — Luồng end-to-end (rút gọn)
+%% Hai thực thể: Khách chỉ REST; Nhân viên/Admin tương tác API
+
+sequenceDiagram
+  autonumber
+  actor Kh as Khách hàng
+  participant FE as Frontend
+  participant API as Backend API
+  actor NV as Nhân viên
+  actor AD as Admin
+
+  Kh->>FE: Đặt lịch, xem xe
+  FE->>API: POST /customer/bookings
+  API-->>FE: Booking created
+
+  NV->>API: POST /staff/repair-orders/intake
+  Note over NV,API: Gắn booking + xe + khách
+
+  NV->>API: POST /staff/repair-orders/roId/quotes
+  NV->>API: PUT /staff/quotes/qId/lines
+  NV->>API: POST /staff/quotes/qId/send
+  API-->>Kh: (thực tế: email/push hoặc UI refresh)
+
+  Kh->>FE: Mở màn báo giá
+  FE->>API: POST /customer/quotes/qId/approve
+  alt Từ chối báo giá
+    Kh->>FE: Không đồng ý
+    FE->>API: POST /customer/quotes/qId/reject
+    NV->>API: Chỉnh báo giá và gửi lại
+  end
+
+  loop Tiến độ sửa
+    NV->>API: POST /staff/repair-orders/roId/progress
+  end
+
+  NV->>API: POST /staff/parts-requests
+  AD->>API: POST .../parts-requests/id/approve
+  AD->>API: POST .../parts-requests/id/fulfill
+
+  NV->>API: POST /staff/repair-orders/roId/complete-work
+  Kh->>API: POST /customer/payments + .../complete
+  NV->>API: POST /staff/repair-orders/roId/handover
+  Kh->>API: POST /customer/ratings

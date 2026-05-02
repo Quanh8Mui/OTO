@@ -1,0 +1,195 @@
+<mxfile host="app.diagrams.net" agent="GPT" pages="2">
+  <diagram id="OTO-domain" name="OTO Domain Entities">
+    <mxGraphModel dx="1645" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontStyle=1;fontSize=14;" value="OTO Garage — Domain (backend JPA)&#xa;Import: File → Open / kéo thả vào diagrams.net" vertex="1">
+          <mxGeometry height="50" width="520" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="User" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;" value="&lt;b&gt;User&lt;/b&gt;&lt;hr&gt;id: Long&#xa;email, passwordHash&#xa;fullName, phone&#xa;role: Role&#xa;active: boolean" vertex="1">
+          <mxGeometry height="110" width="180" x="40" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="Employee" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;" value="&lt;b&gt;Employee&lt;/b&gt;&lt;hr&gt;id: Long&#xa;employeeCode&#xa;position" vertex="1">
+          <mxGeometry height="90" width="180" x="40" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Vehicle" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=8;" value="&lt;b&gt;Vehicle&lt;/b&gt;&lt;hr&gt;id: Long&#xa;licensePlate&#xa;brand, model, year&#xa;vin, color" vertex="1">
+          <mxGeometry height="100" width="180" x="280" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ServiceCatalogItem" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;" value="&lt;b&gt;ServiceCatalogItem&lt;/b&gt;&lt;hr&gt;code, name&#xa;description&#xa;basePrice&#xa;active" vertex="1">
+          <mxGeometry height="100" width="200" x="520" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="Part" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;" value="&lt;b&gt;Part&lt;/b&gt;&lt;hr&gt;sku, name&#xa;unitPrice&#xa;quantityOnHand, minStock&#xa;category, active" vertex="1">
+          <mxGeometry height="100" width="200" x="780" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="Booking" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=8;" value="&lt;b&gt;Booking&lt;/b&gt;&lt;hr&gt;bookingNumber&#xa;requestedDate, timeSlot&#xa;notes&#xa;status: BookingStatus" vertex="1">
+          <mxGeometry height="100" width="200" x="280" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="RepairOrder" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;" value="&lt;b&gt;RepairOrder&lt;/b&gt;&lt;hr&gt;orderNumber&#xa;status: RepairOrderStatus&#xa;intakeNotes, progressNotes" vertex="1">
+          <mxGeometry height="100" width="220" x="540" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="RepairProgressEvent" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;" value="&lt;b&gt;RepairProgressEvent&lt;/b&gt;&lt;hr&gt;message, stepLabel&#xa;createdAt" vertex="1">
+          <mxGeometry height="80" width="220" x="540" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="Quote" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=8;" value="&lt;b&gt;Quote&lt;/b&gt;&lt;hr&gt;quoteNumber, version&#xa;status: QuoteStatus&#xa;labor/parts/tax/grandTotal" vertex="1">
+          <mxGeometry height="100" width="220" x="820" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="QuoteLine" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=8;" value="&lt;b&gt;QuoteLine&lt;/b&gt;&lt;hr&gt;lineType: LABOR|PART&#xa;description&#xa;qty, unitPrice, lineTotal" vertex="1">
+          <mxGeometry height="100" width="220" x="1080" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="PartsRequest" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;" value="&lt;b&gt;PartsRequest&lt;/b&gt;&lt;hr&gt;requestNumber&#xa;status&#xa;adminNote&#xa;fulfilledAt" vertex="1">
+          <mxGeometry height="100" width="200" x="820" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="PartsRequestLine" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;" value="&lt;b&gt;PartsRequestLine&lt;/b&gt;&lt;hr&gt;quantityRequested&#xa;quantityIssued" vertex="1">
+          <mxGeometry height="80" width="200" x="1170" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="Payment" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=8;" value="&lt;b&gt;Payment&lt;/b&gt;&lt;hr&gt;paymentNumber&#xa;amount, method&#xa;status, transactionRef" vertex="1">
+          <mxGeometry height="95" width="220" x="540" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="ServiceRating" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=8;" value="&lt;b&gt;ServiceRating&lt;/b&gt;&lt;hr&gt;rating 1–5&#xa;comment&#xa;(1 repair Order)" vertex="1">
+          <mxGeometry height="90" width="200" x="820" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="StaffSchedule" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;" value="&lt;b&gt;StaffSchedule&lt;/b&gt;&lt;hr&gt;dayOfWeek&#xa;startTime, endTime" vertex="1">
+          <mxGeometry height="80" width="180" x="40" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="Notification" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=8;" value="&lt;b&gt;Notification&lt;/b&gt;&lt;hr&gt;eventType&#xa;title, message&#xa;readFlag" vertex="1">
+          <mxGeometry height="90" width="180" x="40" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="NotificationSetting" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=8;" value="&lt;b&gt;NotificationSetting&lt;/b&gt;&lt;hr&gt;eventKey&#xa;enabled, channel&#xa;templates" vertex="1">
+          <mxGeometry height="90" width="200" x="260" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="eEmpUser" edge="1" parent="1" source="Employee" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;rounded=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" target="User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eVu" edge="1" parent="1" source="Vehicle" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="User">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eBv" edge="1" parent="1" source="Booking" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="Vehicle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eBu" edge="1" parent="1" source="Booking" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;dashed=1;" target="User">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eBsc" edge="1" parent="1" source="Booking" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="ServiceCatalogItem">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eROcust" edge="1" parent="1" source="RepairOrder" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="User">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eROveh" edge="1" parent="1" source="RepairOrder" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="Vehicle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eRObook" edge="1" parent="1" source="RepairOrder" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="Booking">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eROstaff" edge="1" parent="1" source="RepairOrder" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="User">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eRPE" edge="1" parent="1" source="RepairProgressEvent" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="RepairOrder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eRPEu" edge="1" parent="1" source="RepairProgressEvent" style="endArrow=ERmany;startArrow=ERmandOne;html=1;dashed=1;" target="User">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eQr" edge="1" parent="1" source="Quote" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="RepairOrder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eQl" edge="1" parent="1" source="QuoteLine" style="endArrow=cross;html=1;startArrow=diamondThin;startFill=1;" target="Quote">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eQLsc" edge="1" parent="1" source="QuoteLine" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="ServiceCatalogItem">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1020" y="200" />
+              <mxPoint x="620" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eQLp" edge="1" parent="1" source="QuoteLine" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="Part">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1180" y="220" />
+              <mxPoint x="880" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ePRro" edge="1" parent="1" source="PartsRequest" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="RepairOrder">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ePRu" edge="1" parent="1" source="PartsRequest" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="User">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ePRl" edge="1" parent="1" source="PartsRequestLine" style="endArrow=cross;html=1;startArrow=diamondThin;startFill=1;" target="PartsRequest">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ePRLp" edge="1" parent="1" source="PartsRequestLine" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="Part">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ePay" edge="1" parent="1" source="Payment" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="RepairOrder">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ePayq" edge="1" parent="1" source="Payment" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="Quote">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="930" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eSr" edge="1" parent="1" source="ServiceRating" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="RepairOrder">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="605" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eSrU" edge="1" parent="1" source="ServiceRating" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;dashed=1;endArrow=block;" target="User">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="605" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eSSu" edge="1" parent="1" source="StaffSchedule" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eNu" edge="1" parent="1" source="Notification" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=block;" target="User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="VUyLqZRreofVzy3tWg4J" name="Page-2">
+    <mxGraphModel dx="1645" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
