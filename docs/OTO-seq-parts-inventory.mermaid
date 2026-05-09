@@ -1,0 +1,23 @@
+%% Luồng yêu cầu phụ tùng & xuất kho
+
+sequenceDiagram
+  participant NV as Staff
+  participant API as Backend
+  participant AD as Admin
+  participant DB as PostgreSQL/parts
+
+  NV->>API: POST parts-requests (repairOrderId, lines[])
+  Note over API: status PENDING
+
+  AD->>API: GET .../pending
+  AD->>API: POST .../approve
+  Note over API: APPROVED
+
+  AD->>API: POST .../fulfill
+  API->>DB: Kiểm tra quantity_on_hand mỗi part
+  alt Đủ hàng
+    API->>DB: Trừ kho + quantityIssued
+    Note over API: FULFILLED
+  else Thiếu hàng
+    API-->>AD: lỗi thiếu tồn
+  end

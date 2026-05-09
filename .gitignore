@@ -1,0 +1,18 @@
+## Backend (Maven)
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+
+## Frontend (Vite/TS)
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+
+## IDE / OS
+.vscode/
+.DS_Store
+
+target/
+backend/target/

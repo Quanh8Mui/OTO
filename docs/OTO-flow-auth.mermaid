@@ -1,0 +1,15 @@
+%% Luồng xác thực JWT — request có/không token
+
+flowchart TD
+  A[HTTP Request] --> B{Đường dẫn public?}
+  B -->|/api/auth/register<br/>/api/auth/login<br/>/api/public/** Có| C[Không cần JWT]
+  B -->|Không| D{Có Bearer token?}
+
+  D -->|Không| E[401 Unauthorized]
+  D -->|Có| F[JwtAuthenticationFilter kiểm tra chữ ký]
+  F --> G{Token hợp lệ?}
+  G -->|Không| E
+  G -->|Có| H[Nạp User vào SecurityContext]
+  H --> I{Đủ ROLE_...?}
+  I -->|Đúng| J[Đi vào Controller/Service]
+  I -->|Sai quyền| K[403 Forbidden]

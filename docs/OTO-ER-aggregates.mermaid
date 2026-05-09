@@ -1,0 +1,46 @@
+%% Cụm nghiệp vụ: gốc cụm (aggregate root) và thành phần — Mermaid
+
+classDiagram
+  direction TB
+
+  class Booking {
+    <<Aggregate Root>>
+  }
+
+  class RepairOrder {
+    <<Aggregate Root>>
+  }
+
+  class Quote {
+    <<entity trong cụm RO>>
+  }
+
+  class PartsRequest {
+    <<entity trong cụm RO>>
+  }
+
+  Booking ..> User : customer
+  Booking ..> Vehicle
+  Booking ..> ServiceCatalogItem : optional
+
+  RepairOrder ..> User : customer
+  RepairOrder ..> Vehicle
+  RepairOrder ..> Booking : optional
+  RepairOrder ..> User : assignedStaff
+
+  RepairOrder "1" *-- "*" RepairProgressEvent : timeline
+  RepairOrder "1" *-- "*" Quote
+  Quote "1" *-- "*" QuoteLine
+
+  RepairOrder "1" *-- "*" PartsRequest
+  PartsRequest "1" *-- "*" PartsRequestLine
+
+  RepairOrder "1" o-- "*" Payment
+  RepairOrder "1" o-- "0..1" ServiceRating
+
+  QuoteLine ..> ServiceCatalogItem
+  QuoteLine ..> Part
+  PartsRequestLine ..> Part
+
+  Note for RepairOrder "Một transaction nghiệp vụ thường bắt đầu từ RepairOrder"
+  Note for Booking "Đặt lịch tách khỏi xưởng cho đến khi intake tạo RepairOrder"

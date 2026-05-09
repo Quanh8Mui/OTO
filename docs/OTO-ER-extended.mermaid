@@ -1,0 +1,96 @@
+%% Mở rộng đề xuất (chưa có trong code hiện tại) — nếu thầy yêu cầu mô hình đầy đủ hơn
+
+erDiagram
+  users ||--o{ vehicles : ""
+  users ||--o{ repair_orders : ""
+
+  parts ||--o{ inventory_transactions : "stock_move"
+  parts_requests ||--o{ inventory_transactions : "issue"
+  users ||--o{ inventory_transactions : "performed_by"
+
+  repair_orders ||--o{ attachments : "intake_photos"
+  users ||--o{ attachments : "uploaded_by"
+
+  suppliers ||--o{ purchase_orders : ""
+  purchase_orders ||--|{ purchase_order_lines : ""
+  parts ||--o{ purchase_order_lines : ""
+  users ||--o{ purchase_orders : "created_by"
+
+  garage_bays ||--o{ appointment_slots : ""
+  appointment_slots ||--o{ bookings : "optional_link"
+
+  repair_orders ||--o{ invoices : ""
+  invoices ||--o{ invoice_lines : ""
+
+  payments ||--o{ payment_events : "gateway_callback"
+
+  inventory_transactions {
+    bigint id PK
+    bigint part_id FK
+    string type
+    int quantity_delta
+    string reason
+    timestamptz created_at
+  }
+
+  attachments {
+    bigint id PK
+    bigint repair_order_id FK
+    string file_url
+    string caption
+  }
+
+  suppliers {
+    bigint id PK
+    string name
+    string contact
+  }
+
+  purchase_orders {
+    bigint id PK
+    string po_number
+    string status
+  }
+
+  purchase_order_lines {
+    bigint id PK
+    bigint purchase_order_id FK
+    bigint part_id FK
+    int quantity
+    decimal unit_cost
+  }
+
+  garage_bays {
+    bigint id PK
+    string code
+  }
+
+  appointment_slots {
+    bigint id PK
+    timestamptz start_at
+    timestamptz end_at
+    int capacity
+  }
+
+  invoices {
+    bigint id PK
+    bigint repair_order_id FK
+    string invoice_number
+    string tax_code
+    decimal total
+  }
+
+  invoice_lines {
+    bigint id PK
+    bigint invoice_id FK
+    string description
+    decimal amount
+  }
+
+  payment_events {
+    bigint id PK
+    bigint payment_id FK
+    string provider
+    string raw_payload
+    string status
+  }

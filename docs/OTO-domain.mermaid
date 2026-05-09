@@ -1,0 +1,131 @@
+%% diagrams.net → Insert → Advanced → Mermaid → dán toàn bộ (trừ dòng %% đầu nếu bị lỗi)
+
+classDiagram
+  direction LR
+
+  class User {
+    +Long id
+    +email
+    +fullName
+    +Role role
+  }
+
+  class Employee {
+    +Long id
+    +employeeCode
+    +position
+  }
+
+  class Vehicle {
+    +Long id
+    +licensePlate
+    +brand model
+  }
+
+  class ServiceCatalogItem {
+    +code name
+    +basePrice
+  }
+
+  class Part {
+    +sku unitPrice
+    +quantityOnHand
+  }
+
+  class Booking {
+    +bookingNumber
+    +requestedDate
+    +BookingStatus
+  }
+
+  class RepairOrder {
+    +orderNumber
+    +RepairOrderStatus
+  }
+
+  class RepairProgressEvent {
+    +message
+    +stepLabel
+  }
+
+  class Quote {
+    +quoteNumber
+    +QuoteStatus
+    +grandTotal
+  }
+
+  class QuoteLine {
+    +QuoteLineType
+    +quantity lineTotal
+  }
+
+  class PartsRequest {
+    +requestNumber
+    +PartsRequestStatus
+  }
+
+  class PartsRequestLine {
+    +quantityRequested
+    +quantityIssued
+  }
+
+  class Payment {
+    +paymentNumber
+    +PaymentMethod
+    +PaymentStatus
+    +amount
+  }
+
+  class ServiceRating {
+    +rating comment
+  }
+
+  class StaffSchedule {
+    +dayOfWeek
+    +startTime endTime
+  }
+
+  class NotificationSetting {
+    +eventKey enabled
+    +channel
+  }
+
+  class Notification {
+    +eventType
+    +title message
+  }
+
+  Employee "1" --> "1" User : employs
+  User "1" --> "*" Vehicle : owns
+  User "1" --> "*" Booking
+  Vehicle "1" --> "*" Booking
+  Booking "0..*" --> "0..1" ServiceCatalogItem : service
+
+  User "1" --> "*" RepairOrder : customer
+  Vehicle "1" --> "*" RepairOrder
+  Booking "0..1" --> "*" RepairOrder
+  User "0..*" --> "0..*" RepairOrder : assignedStaff
+
+  RepairOrder "1" --> "*" RepairProgressEvent
+  RepairProgressEvent "0..*" --> "0..1" User : createdBy
+
+  RepairOrder "1" --> "*" Quote
+  Quote "1" *-- "*" QuoteLine : composition
+  QuoteLine "0..*" --> "0..1" ServiceCatalogItem
+  QuoteLine "0..*" --> "0..1" Part
+
+  RepairOrder "1" --> "*" PartsRequest
+  User "1" --> "*" PartsRequest : requestedBy
+  PartsRequest "1" *-- "*" PartsRequestLine : composition
+  PartsRequestLine "*" --> "1" Part
+
+  RepairOrder "1" --> "*" Payment
+  Payment "0..*" --> "0..1" Quote
+
+  RepairOrder "1" --> "0..1" ServiceRating
+  User "1" --> "*" ServiceRating : ratedBy
+
+  User "1" --> "*" StaffSchedule
+
+  Notification "*" --> "1" User
+  NotificationSetting ..> Notification : config

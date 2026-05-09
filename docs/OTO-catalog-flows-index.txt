@@ -1,0 +1,39 @@
+=== QUAN TRỌNG — KHÔNG Dùng File → Open cho file .mermaid ===
+.draw.io / diagrams.net chỉ "Open" được file *.drawio hoặc XML (<mxfile...>).
+File *.mermaid KHÔNG mở bằng Open — phải dán nội dung qua Insert:
+
+  1. Mở https://app.diagrams.net (hoặc draw.io Desktop)
+  2. File → New diagram → chọn Blank
+  3. Arrange → Insert → Advanced → Mermaid
+     (hoặc Insert → Advanced → Mermaid tùy giao diện)
+  4. Copy toàn bộ nội dung file .mermaid → Paste → Insert
+
+Đã có file mở được bằng Open: docs/OTO-domain-diagram.drawio
+
+Cách khác: mở https://mermaid.live → dán code → Export PNG/SVG → kéo ảnh vào diagrams.net.
+
+
+=== BIỂU ĐỒ PHÂN RÃ CHỨC NĂNG ===
+OTO-FRD-tree.mermaid      — Phân rã WBS chi tiết theo UC-1 … UC-4 (khuyên dùng cho báo cáo).
+OTO-FRD-mindmap.mermaid   — Mindmap tổng quan (nếu công cụ hỗ trợ).
+
+=== BIỂU ĐỒ LUỒNG ĐÃ CÓ + MỚI ===
+Luồng ngữ cảnh:
+OTO-flow-context-L0.mermaid — Tác nhân ↔ Hệ thống.
+
+Luồng nghiệp vụ mới trong lần này:
+OTO-flow-booking-to-repair.mermaid   — Booking → intake → báo giá → duyệt.
+OTO-flow-quote-payment-delivery.mermaid — Approved → làm xe → TT → handover → rating.
+OTO-flow-parts-admin.mermaid         — Phiếu kho pending → approve → fulfill.
+
+Luồng đã có từ trước (vẫn dùng):
+OTO-flow-customer-main.mermaid
+OTO-flow-staff-main.mermaid
+OTO-flow-admin-main.mermaid
+OTO-flow-auth.mermaid
+OTO-seq-end-to-end.mermaid
+OTO-seq-quote-decision.mermaid
+OTO-seq-parts-inventory.mermaid
+OTO-seq-payment-handover.mermaid
+
+Cách dán: diagrams.net → Insert → Advanced → Mermaid (copy 1 file mỗi lần).

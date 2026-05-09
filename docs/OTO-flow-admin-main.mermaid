@@ -1,0 +1,25 @@
+%% Luồng chính — Admin
+
+flowchart TD
+  A([Đăng nhập ADMIN]) --> B[JWT]
+  B --> C{Menu}
+
+  C --> D[CRUD nhân viên /api/admin/employees]
+  C --> E[CRUD phụ tùng /api/admin/parts]
+  C --> F[CRUD dịch vụ /api/admin/service-catalog]
+  C --> G[Dashboard GET /api/admin/dashboard]
+  C --> H[Báo cáo GET /api/admin/revenue]
+
+  G --> I[Giám sát: đơn theo status, DT hôm nay, low stock]
+  E --> J[Tồn kho đủ để fulfill phiếu?]
+
+  C --> K[Phiếu lĩnh từ xưởng GET .../parts-requests/pending]
+  K --> L{Duyệt?}
+  L -->|Đồng ý| M[approve]
+  L -->|Từ chối| N[reject]
+  M --> O[fulfill: trừ kho POST .../fulfill]
+
+  C --> P[Cấu hình thông báo PUT .../notification-settings/id]
+
+  style A fill:#f8d7da
+  style O fill:#d4edda

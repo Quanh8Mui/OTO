@@ -1,0 +1,18 @@
+%% Luồng: Sau khi báo giá được duyệt → Thanh toán → Bàn giao
+
+flowchart LR
+  A[Quote APPROVED] --> B[RepairOrder<br/>IN_PROGRESS]
+  B --> C[Cập nhật tiến độ /<br/>phiếu lĩnh nếu cần]
+  C --> D[complete-work]
+  D --> E[RepairOrder<br/>COMPLETED]
+
+  E --> F[Khách thanh toán<br/>POST payments + complete]
+  F --> G[Payment COMPLETED]
+
+  G --> H[handover staff]
+  H --> I[RepairOrder<br/>DELIVERED]
+
+  I --> J[Rating khách]
+
+  style I fill:#d4edda
+  style J fill:#fff3cd

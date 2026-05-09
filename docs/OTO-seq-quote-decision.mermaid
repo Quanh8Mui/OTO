@@ -1,0 +1,21 @@
+%% Luồng báo giá — gửi, duyệt, trạng thái đơn
+
+sequenceDiagram
+  participant NV as Staff
+  participant API as Backend
+  participant KH as Customer
+
+  NV->>API: createDraftQuote(repairOrderId)
+  API-->>NV: quote DRAFT
+  NV->>API: saveLines(quoteId, labor+parts)
+  NV->>API: sendQuote(quoteId)
+  Note over API: Quote SENT<br/>RepairOrder AWAITING_APPROVAL
+
+  KH->>API: get quotes
+  alt Approve
+    KH->>API: approve(quoteId)
+    Note over API: Quote APPROVED<br/>RepairOrder IN_PROGRESS
+  else Reject
+    KH->>API: reject(quoteId)
+    Note over API: Quote REJECTED<br/>RepairOrder QUOTING
+  end
