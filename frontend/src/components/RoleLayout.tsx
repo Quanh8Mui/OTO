@@ -1,6 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-export type NavItem = { to: string; label: string; icon: string; end?: boolean }
+export type NavItem = { to: string; label: string; end?: boolean }
 
 type Props = {
   brand: string
@@ -16,6 +17,14 @@ const accentClass: Record<NonNullable<Props['accent']>, string> = {
 }
 
 export function RoleLayout({ brand, subtitle, nav, accent = 'customer' }: Props) {
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  function handleLogout() {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div className={`app-layout ${accentClass[accent]}`}>
       <aside className="app-sidebar">
@@ -34,9 +43,6 @@ export function RoleLayout({ brand, subtitle, nav, accent = 'customer' }: Props)
               end={item.end}
               className={({ isActive }) => `app-nav-link${isActive ? ' app-nav-link--active' : ''}`}
             >
-              <span className="app-nav-icon" aria-hidden>
-                {item.icon}
-              </span>
               {item.label}
             </NavLink>
           ))}
@@ -45,6 +51,9 @@ export function RoleLayout({ brand, subtitle, nav, accent = 'customer' }: Props)
           <NavLink to="/" className="app-nav-link app-nav-link--ghost">
             ← Trang chủ
           </NavLink>
+          <button type="button" className="app-nav-link app-nav-link--ghost app-nav-button" onClick={handleLogout}>
+            ⎋ Đăng xuất
+          </button>
         </div>
       </aside>
       <main className="app-main">
@@ -135,14 +144,21 @@ export function RoleLayout({ brand, subtitle, nav, accent = 'customer' }: Props)
         .app-nav-link--ghost {
           font-size: 0.85rem;
         }
-        .app-nav-icon {
-          width: 1.25rem;
-          text-align: center;
-          opacity: 0.9;
+        .app-nav-button {
+          width: 100%;
+          border: 0;
+          background: transparent;
+          cursor: pointer;
+          text-align: left;
+          font: inherit;
+          margin-top: 0.35rem;
         }
         .app-sidebar-foot {
           padding-top: 0.5rem;
           border-top: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
         }
         .app-main {
           flex: 1;

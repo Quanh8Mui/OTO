@@ -72,10 +72,6 @@ export function Login() {
             </button>
           </div>
         </form>
-        <p className="muted" style={{ marginTop: '1.5rem', fontSize: '0.85rem' }}>
-          Demo UI: sau này nối Spring Security + JWT. Chọn phân hệ từ{' '}
-          <Link to="/">trang chủ</Link>.
-        </p>
       </div>
       <div style={{ textAlign: 'center' }}>
         <Link to="/" className="muted">

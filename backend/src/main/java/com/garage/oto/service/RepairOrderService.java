@@ -47,26 +47,30 @@ public class RepairOrderService {
     this.documentNumberService = documentNumberService;
   }
 
+  @Transactional(readOnly = true)
   public List<RepairOrderResponse> listForCustomer(User customer) {
     return repairOrderRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId()).stream()
         .map(RepairOrderService::toResponse)
         .toList();
   }
 
+  @Transactional(readOnly = true)
   public RepairOrderResponse getForCustomer(User customer, Long id) {
-    RepairOrder ro = repairOrderRepository.findById(id).orElseThrow(RepairOrderService::notFound);
+    RepairOrder ro = repairOrderRepository.findWithRelationsById(id).orElseThrow(RepairOrderService::notFound);
     if (!ro.getCustomer().getId().equals(customer.getId())) {
       throw new ApiException(HttpStatus.FORBIDDEN, "Forbidden");
     }
     return toResponse(ro);
   }
 
+  @Transactional(readOnly = true)
   public List<RepairOrderResponse> listForStaff(User staff) {
     return repairOrderRepository.findByAssignedStaffIdOrderByCreatedAtDesc(staff.getId()).stream()
         .map(RepairOrderService::toResponse)
         .toList();
   }
 
+  @Transactional(readOnly = true)
   public List<RepairOrderResponse> listAllActive() {
     return repairOrderRepository
         .findByStatusIn(
@@ -81,17 +85,17 @@ public class RepairOrderService {
         .toList();
   }
 
+  @Transactional(readOnly = true)
   public List<RepairOrderResponse> listAllOrders() {
     return repairOrderRepository.findAllByOrderByUpdatedAtDesc().stream()
         .map(RepairOrderService::toResponse)
         .toList();
   }
 
+  @Transactional(readOnly = true)
   public RepairOrderResponse getById(Long id) {
-    return repairOrderRepository
-        .findById(id)
-        .map(RepairOrderService::toResponse)
-        .orElseThrow(RepairOrderService::notFound);
+    RepairOrder ro = repairOrderRepository.findWithRelationsById(id).orElseThrow(RepairOrderService::notFound);
+    return toResponse(ro);
   }
 
   @Transactional
@@ -155,16 +159,18 @@ public class RepairOrderService {
     progressEventRepository.save(e);
   }
 
+  @Transactional(readOnly = true)
   public List<com.garage.oto.dto.repair.ProgressEventResponse> listProgressForCustomer(
       User customer, Long repairOrderId) {
     RepairOrder ro =
-        repairOrderRepository.findById(repairOrderId).orElseThrow(RepairOrderService::notFound);
+        repairOrderRepository.findWithRelationsById(repairOrderId).orElseThrow(RepairOrderService::notFound);
     if (!ro.getCustomer().getId().equals(customer.getId())) {
       throw new ApiException(HttpStatus.FORBIDDEN, "Forbidden");
     }
     return listProgress(repairOrderId);
   }
 
+  @Transactional(readOnly = true)
   public List<com.garage.oto.dto.repair.ProgressEventResponse> listProgress(Long repairOrderId) {
     return progressEventRepository.findByRepairOrderIdOrderByCreatedAtAsc(repairOrderId).stream()
         .map(
@@ -173,9 +179,13 @@ public class RepairOrderService {
                     e.getId(),
                     e.getMessage(),
                     e.getStepLabel(),
-                    e.getCreatedBy() != null ? e.getCreatedBy().getFullName() : null,
+                    safeUserName(e.getCreatedBy()),
                     e.getCreatedAt()))
         .toList();
+  }
+
+  private static String safeUserName(User user) {
+    return user != null ? user.getFullName() : null;
   }
 
   public RepairOrder requireOrder(Long id) {

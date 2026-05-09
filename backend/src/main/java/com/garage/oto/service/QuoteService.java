@@ -151,8 +151,9 @@ public class QuoteService {
     q.setLaborTotal(labor);
     q.setPartsTotal(parts);
     BigDecimal sub = labor.add(parts);
+    BigDecimal taxRatePercent = q.getTaxRate() == null ? BigDecimal.ZERO : q.getTaxRate();
     q.setTaxAmount(
-        sub.multiply(q.getTaxRate()).setScale(2, RoundingMode.HALF_UP));
+        sub.multiply(taxRatePercent).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP));
     q.setGrandTotal(sub.add(q.getTaxAmount()));
   }
 

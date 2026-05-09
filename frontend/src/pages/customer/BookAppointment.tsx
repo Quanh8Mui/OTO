@@ -1,38 +1,59 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type Vehicle } from '../../lib/api'
+import { api } from '../../lib/api'
+
+function formatDateInput(date = new Date()) {
+  const local = new Date(date)
+  const year = local.getFullYear()
+  const month = String(local.getMonth() + 1).padStart(2, '0')
+  const day = String(local.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 export function BookAppointment() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [vehicleId, setVehicleId] = useState<number | null>(null)
+  const [licensePlate, setLicensePlate] = useState('')
+  const [brand, setBrand] = useState('')
+  const [model, setModel] = useState('')
+  const [year, setYear] = useState('')
+  const [vin, setVin] = useState('')
+  const [color, setColor] = useState('')
   const [serviceTypeLabel, setServiceTypeLabel] = useState('Bảo dưỡng định kỳ')
-  const [requestedDate, setRequestedDate] = useState('')
+  const [requestedDate, setRequestedDate] = useState(() => formatDateInput())
   const [timeSlot, setTimeSlot] = useState('08:00 – 10:00')
   const [notes, setNotes] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [nowLabel, setNowLabel] = useState(() => new Date().toLocaleString('vi-VN'))
+  const todayLabel = useMemo(() => new Date(requestedDate || formatDateInput()).toLocaleDateString('vi-VN'), [requestedDate])
 
   useEffect(() => {
-    let active = true
-    api.customer.vehicles().then((v) => {
-      if (!active) return
-      setVehicles(v)
-      if (!vehicleId && v.length > 0) setVehicleId(v[0].id)
-    })
-    return () => {
-      active = false
-    }
-  }, [vehicleId])
+    const timer = window.setInterval(() => {
+      setNowLabel(new Date().toLocaleString('vi-VN'))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
-  const canSubmit = useMemo(() => vehicleId != null && requestedDate.length > 0, [vehicleId, requestedDate])
+  const canSubmit = useMemo(() => licensePlate.trim().length > 0 && requestedDate.length > 0, [licensePlate, requestedDate])
 
   async function submitBooking(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!canSubmit || vehicleId == null) return
+    if (!canSubmit) return
     setLoading(true)
     setMessage(null)
     try {
-      await api.customer.createBooking({ vehicleId, serviceTypeLabel, requestedDate, timeSlot, notes })
-      setMessage('Đặt lịch thành công.')
+      await api.customer.createBooking({
+        vehicleId: null,
+        licensePlate,
+        brand,
+        model,
+        year: year ? Number(year) : null,
+        vin,
+        color,
+        serviceTypeLabel,
+        requestedDate,
+        timeSlot,
+        notes,
+      })
+      setMessage('Đặt lịch thành công. Xe đã được ghi nhận.')
       setNotes('')
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Không thể đặt lịch')
@@ -44,20 +65,39 @@ export function BookAppointment() {
   return (
     <div className="page">
       <h1 className="page-title">Đặt lịch bảo dưỡng / sửa chữa</h1>
-      <p className="page-desc">Chọn xe, loại dịch vụ và khung giờ phù hợp.</p>
+      <p className="page-desc">Nhập thông tin xe, hệ thống sẽ tự tạo xe mới nếu chưa có trong hồ sơ khách hàng.</p>
 
       <div className="card" style={{ maxWidth: 560 }}>
         <form onSubmit={submitBooking}>
-          <div className="field">
-            <label>Xe</label>
-            <select value={vehicleId ?? ''} onChange={(e) => setVehicleId(Number(e.target.value))} required>
-              {vehicles.length === 0 ? <option value="">Chưa có xe, vui lòng thêm ở backend</option> : null}
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.licensePlate} · {[v.brand, v.model].filter(Boolean).join(' ')}
-                </option>
-              ))}
-            </select>
+          <div className="grid-2">
+            <div className="field">
+              <label>Biển số</label>
+              <input value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} placeholder="59B-88888" required />
+            </div>
+            <div className="field">
+              <label>Hãng xe</label>
+              <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Honda" />
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="field">
+              <label>Dòng xe</label>
+              <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="CR-V" />
+            </div>
+            <div className="field">
+              <label>Năm xe</label>
+              <input value={year} onChange={(e) => setYear(e.target.value)} placeholder="2022" inputMode="numeric" />
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="field">
+              <label>VIN</label>
+              <input value={vin} onChange={(e) => setVin(e.target.value)} placeholder="Nhập nếu có" />
+            </div>
+            <div className="field">
+              <label>Màu xe</label>
+              <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Đen" />
+            </div>
           </div>
           <div className="field">
             <label>Loại dịch vụ</label>
@@ -68,11 +108,14 @@ export function BookAppointment() {
               <option>Kiểm tra tổng quát</option>
             </select>
           </div>
+          <div className="field">
+            <label>Ngày</label>
+            <input type="date" min={formatDateInput()} value={requestedDate} onChange={(e) => setRequestedDate(e.target.value)} />
+            <p className="muted" style={{ marginTop: '0.35rem' }}>
+              Hôm nay: {todayLabel} · Cập nhật lúc: {nowLabel}
+            </p>
+          </div>
           <div className="grid-2">
-            <div className="field">
-              <label>Ngày</label>
-              <input type="date" value={requestedDate} onChange={(e) => setRequestedDate(e.target.value)} />
-            </div>
             <div className="field">
               <label>Giờ ưu tiên</label>
               <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>

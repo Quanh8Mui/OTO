@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { RealtimeCalendar } from '../../components/RealtimeCalendar'
 import { api, type RepairOrder } from '../../lib/api'
 
 export function StaffDashboard() {
@@ -19,25 +20,28 @@ export function StaffDashboard() {
       <h1 className="page-title">Xưởng hôm nay</h1>
       <p className="page-desc">Tổng quan lệnh sửa chữa và tải công việc.</p>
 
-      <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
-        <div className="card">
-          <div className="stat">
-            <span className="stat-label">Xe trong xưởng</span>
-            <span className="stat-value">{inProgress.length}</span>
+      <div className="grid-2" style={{ marginBottom: '1.5rem', alignItems: 'start' }}>
+        <div className="grid-3">
+          <div className="card">
+            <div className="stat">
+              <span className="stat-label">Xe trong xưởng</span>
+              <span className="stat-value">{inProgress.length}</span>
+            </div>
+          </div>
+          <div className="card">
+            <div className="stat">
+              <span className="stat-label">Báo giá chờ KH</span>
+              <span className="stat-value">{orders.filter((x) => x.status === 'AWAITING_APPROVAL').length}</span>
+            </div>
+          </div>
+          <div className="card">
+            <div className="stat">
+              <span className="stat-label">Yêu cầu kho mới</span>
+              <span className="stat-value">-</span>
+            </div>
           </div>
         </div>
-        <div className="card">
-          <div className="stat">
-            <span className="stat-label">Báo giá chờ KH</span>
-            <span className="stat-value">{orders.filter((x) => x.status === 'AWAITING_APPROVAL').length}</span>
-          </div>
-        </div>
-        <div className="card">
-          <div className="stat">
-            <span className="stat-label">Yêu cầu kho mới</span>
-            <span className="stat-value">-</span>
-          </div>
-        </div>
+        <RealtimeCalendar title="Lịch realtime của xưởng" compact />
       </div>
 
       <div className="row-between" style={{ marginBottom: '0.75rem' }}>

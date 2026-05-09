@@ -4,7 +4,13 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record BookingRequest(
-    @NotNull Long vehicleId,
+    Long vehicleId,
+    String licensePlate,
+    String brand,
+    String model,
+    Integer year,
+    String vin,
+    String color,
     Long serviceCatalogId,
     String serviceTypeLabel,
     @NotNull LocalDate requestedDate,

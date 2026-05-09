@@ -41,9 +41,15 @@ public class BookingService {
         .toList();
   }
 
+  public List<BookingResponse> listPending() {
+    return bookingRepository.findAllByStatusOrderByCreatedAtDesc(BookingStatus.PENDING).stream()
+        .map(BookingService::toResponse)
+        .toList();
+  }
+
   @Transactional
   public BookingResponse create(User customer, BookingRequest req) {
-    Vehicle v = vehicleService.getOwnedVehicle(customer, req.vehicleId());
+    Vehicle v = resolveVehicle(customer, req);
     ServiceCatalogItem catalog = null;
     if (req.serviceCatalogId() != null) {
       catalog =
@@ -65,9 +71,23 @@ public class BookingService {
     return toResponse(b);
   }
 
+  private Vehicle resolveVehicle(User customer, BookingRequest req) {
+    if (req.vehicleId() != null) {
+      return vehicleService.getOwnedVehicle(customer, req.vehicleId());
+    }
+    if (req.licensePlate() == null || req.licensePlate().trim().isEmpty()) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "License plate is required");
+    }
+    String licensePlate = req.licensePlate().trim().toUpperCase();
+    return vehicleService.findByCustomerAndLicensePlate(customer, licensePlate)
+        .orElseGet(() -> vehicleService.createForBooking(customer, req));
+  }
+
   private static BookingResponse toResponse(Booking b) {
     return new BookingResponse(
         b.getId(),
+        b.getCustomer().getId(),
+        b.getCustomer().getFullName(),
         b.getBookingNumber(),
         b.getVehicle().getId(),
         b.getVehicle().getLicensePlate(),

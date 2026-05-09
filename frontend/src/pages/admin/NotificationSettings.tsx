@@ -15,7 +15,7 @@ export function NotificationSettings() {
       <div className="card" style={{ maxWidth: 640 }}>
         <h2 style={{ fontSize: '1rem', margin: '0 0 1rem' }}>Kênh gửi</h2>
         <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-          <input type="checkbox" defaultChecked /> Email (SMTP — cấu hình trong backend)
+          <input type="checkbox" defaultChecked /> Email (SMTP)
         </label>
         <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
           <input type="checkbox" /> SMS gateway

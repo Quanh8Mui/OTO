@@ -25,7 +25,7 @@ public class StaffPartsRequestController {
   private final PartsRequestService partsRequestService;
 
   @GetMapping("/repair-orders/{repairOrderId}/parts-requests")
-  public List<PartsRequestResponse> listForOrder(@PathVariable Long repairOrderId) {
+  public List<PartsRequestResponse> listForRepairOrder(@PathVariable Long repairOrderId) {
     return partsRequestService.listForRepairOrder(repairOrderId);
   }
 

@@ -6,6 +6,8 @@ import java.time.LocalDate;
 
 public record BookingResponse(
     Long id,
+    Long customerId,
+    String customerName,
     String bookingNumber,
     Long vehicleId,
     String licensePlate,

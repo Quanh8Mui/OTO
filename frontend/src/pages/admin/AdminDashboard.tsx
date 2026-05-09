@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { RealtimeCalendar } from '../../components/RealtimeCalendar'
 import { api, type DashboardResponse } from '../../lib/api'
 import { formatMoney } from '../../lib/format'
 
@@ -73,6 +74,10 @@ export function AdminDashboard() {
           </p>
         </div>
 
+        <RealtimeCalendar title="Lịch realtime của admin" compact />
+      </div>
+
+      <div className="grid-2" style={{ marginTop: '1rem' }}>
         <div className="card card-muted">
           <h2 style={{ fontSize: '1rem', margin: '0 0 1rem' }}>Hoạt động gần đây</h2>
           <ul className="stack" style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--text-muted)' }}>
@@ -82,6 +87,13 @@ export function AdminDashboard() {
               </li>
             ))}
           </ul>
+        </div>
+        <div className="card card-muted">
+          <h2 style={{ fontSize: '1rem', margin: '0 0 1rem' }}>Lưu ý vận hành</h2>
+          <p className="muted" style={{ margin: 0, lineHeight: 1.7 }}>
+            Bảng lịch realtime này đồng bộ theo thời gian thực của trình duyệt. Bạn có thể dùng nó để canh lịch xưởng,
+            theo dõi giờ cao điểm và kiểm tra ca làm việc khi test.
+          </p>
         </div>
       </div>
     </div>

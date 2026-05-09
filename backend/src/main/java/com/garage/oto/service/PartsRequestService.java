@@ -40,12 +40,14 @@ public class PartsRequestService {
     this.documentNumberService = documentNumberService;
   }
 
+  @Transactional(readOnly = true)
   public List<PartsRequestResponse> listForRepairOrder(Long repairOrderId) {
     return partsRequestRepository.findByRepairOrderIdOrderByCreatedAtDesc(repairOrderId).stream()
         .map(this::toResponse)
         .toList();
   }
 
+  @Transactional(readOnly = true)
   public List<PartsRequestResponse> listPending() {
     return partsRequestRepository.findAll().stream()
         .filter(p -> p.getStatus() == PartsRequestStatus.PENDING)
@@ -53,10 +55,15 @@ public class PartsRequestService {
         .toList();
   }
 
+  @Transactional(readOnly = true)
+  public List<PartsRequestResponse> listAll() {
+    return partsRequestRepository.findAll().stream().map(this::toResponse).toList();
+  }
+
   @Transactional
   public PartsRequestResponse create(User staff, PartsRequestCreateRequest req) {
     RepairOrder ro =
-        repairOrderRepository.findById(req.repairOrderId()).orElseThrow(() -> notFoundRo());
+        repairOrderRepository.findWithRelationsById(req.repairOrderId()).orElseThrow(() -> notFoundRo());
     PartsRequest pr = new PartsRequest();
     pr.setRequestNumber(documentNumberService.nextPartsRequestNumber());
     pr.setRepairOrder(ro);
@@ -77,7 +84,7 @@ public class PartsRequestService {
 
   @Transactional
   public PartsRequestResponse approve(Long id, PartsRequestReviewRequest req) {
-    PartsRequest pr = partsRequestRepository.findById(id).orElseThrow(() -> notFound());
+    PartsRequest pr = partsRequestRepository.findWithRelationsById(id).orElseThrow(() -> notFound());
     if (pr.getStatus() != PartsRequestStatus.PENDING) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Request is not pending");
     }
@@ -88,7 +95,7 @@ public class PartsRequestService {
 
   @Transactional
   public PartsRequestResponse fulfill(Long id, PartsRequestReviewRequest req) {
-    PartsRequest pr = partsRequestRepository.findById(id).orElseThrow(() -> notFound());
+    PartsRequest pr = partsRequestRepository.findWithRelationsById(id).orElseThrow(() -> notFound());
     if (pr.getStatus() != PartsRequestStatus.APPROVED) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Request must be approved first");
     }
@@ -111,7 +118,7 @@ public class PartsRequestService {
 
   @Transactional
   public PartsRequestResponse reject(Long id, PartsRequestReviewRequest req) {
-    PartsRequest pr = partsRequestRepository.findById(id).orElseThrow(() -> notFound());
+    PartsRequest pr = partsRequestRepository.findWithRelationsById(id).orElseThrow(() -> notFound());
     if (pr.getStatus() != PartsRequestStatus.PENDING) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Request is not pending");
     }

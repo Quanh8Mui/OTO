@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { RealtimeCalendar } from '../../components/RealtimeCalendar'
 import { api, type Booking, type Quote, type RepairOrder } from '../../lib/api'
 
 const quick = [
@@ -18,7 +19,12 @@ export function CustomerDashboard() {
 
   useEffect(() => {
     let active = true
-    Promise.all([api.customer.bookings(), api.customer.repairOrders(), api.customer.quotes()])
+    const repairOrdersFn = api.customer.repairOrders
+    Promise.all([
+      api.customer.bookings(),
+      typeof repairOrdersFn === 'function' ? repairOrdersFn() : Promise.resolve([] as RepairOrder[]),
+      api.customer.quotes(),
+    ])
       .then(([b, o, q]) => {
         if (!active) return
         setBookings(b)
@@ -42,28 +48,31 @@ export function CustomerDashboard() {
       <h1 className="page-title">Xin chào, {user?.fullName ?? 'khách hàng'}</h1>
       <p className="page-desc">Tóm tắt hoạt động xe và lịch hẹn sắp tới.</p>
 
-      <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
-        <div className="card">
-          <div className="stat">
-            <span className="stat-label">Lịch hẹn sắp tới</span>
-            <span className="stat-value">{upcoming.length}</span>
-            <span className="muted">{upcoming[0]?.licensePlate ?? 'Không có lịch hẹn mới'}</span>
+      <div className="grid-2" style={{ marginBottom: '1.5rem', alignItems: 'start' }}>
+        <div className="grid-3">
+          <div className="card">
+            <div className="stat">
+              <span className="stat-label">Lịch hẹn sắp tới</span>
+              <span className="stat-value">{upcoming.length}</span>
+              <span className="muted">{upcoming[0]?.licensePlate ?? 'Không có lịch hẹn mới'}</span>
+            </div>
+          </div>
+          <div className="card">
+            <div className="stat">
+              <span className="stat-label">Đang trong xưởng</span>
+              <span className="stat-value">{inProgress.length}</span>
+              <span className="muted">{inProgress[0]?.orderNumber ?? 'Không có RO đang xử lý'}</span>
+            </div>
+          </div>
+          <div className="card">
+            <div className="stat">
+              <span className="stat-label">Báo giá chờ duyệt</span>
+              <span className="stat-value">{waitingQuote.length}</span>
+              <span className="muted">{waitingQuote[0]?.quoteNumber ?? 'Không có yêu cầu'}</span>
+            </div>
           </div>
         </div>
-        <div className="card">
-          <div className="stat">
-            <span className="stat-label">Đang trong xưởng</span>
-            <span className="stat-value">{inProgress.length}</span>
-            <span className="muted">{inProgress[0]?.orderNumber ?? 'Không có RO đang xử lý'}</span>
-          </div>
-        </div>
-        <div className="card">
-          <div className="stat">
-            <span className="stat-label">Báo giá chờ duyệt</span>
-            <span className="stat-value">{waitingQuote.length}</span>
-            <span className="muted">{waitingQuote[0]?.quoteNumber ?? 'Không có yêu cầu'}</span>
-          </div>
-        </div>
+        <RealtimeCalendar title="Lịch realtime của khách hàng" compact />
       </div>
 
       <h2 style={{ fontSize: '1.05rem', marginBottom: '0.75rem' }}>Thao tác nhanh</h2>

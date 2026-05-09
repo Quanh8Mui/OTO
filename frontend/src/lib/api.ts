@@ -29,6 +29,8 @@ export type Vehicle = {
 
 export type Booking = {
   id: number
+  customerId: number
+  customerName: string
   bookingNumber: string
   vehicleId: number
   licensePlate: string
@@ -43,12 +45,22 @@ export type Booking = {
 export type RepairOrder = {
   id: number
   orderNumber: string
+  bookingId?: number | null
+  customerId: number
+  customerName: string
+  vehicleId: number
   licensePlate: string
   vehicleLabel?: string
-  status: string
-  progressNotes?: string
+  assignedStaffId?: number | null
   assignedStaffName?: string
+  status: string
+  intakeNotes?: string
+  progressNotes?: string
+  createdAt?: string
+  updatedAt?: string
 }
+
+export type RepairOrderResponse = RepairOrder
 
 export type ProgressEvent = {
   id: number
@@ -114,12 +126,21 @@ export type Part = {
   category?: string
 }
 
+export type StockStatus = 'OK' | 'LOW' | 'OUT'
+
 export type ServiceItem = {
   id: number
   code: string
   name: string
+  description?: string
   basePrice: number
-  active: boolean
+}
+
+export type PublicPartItem = {
+  id: number
+  sku: string
+  name: string
+  unitPrice: number
 }
 
 export type NotificationSetting = {
@@ -134,6 +155,8 @@ export type RevenueReport = {
   totalRevenue: number
   paymentCount: number
 }
+
+export type ChangePasswordPayload = { currentPassword: string; newPassword: string }
 
 type RequestOptions = RequestInit & { auth?: boolean }
 
@@ -159,7 +182,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     const token = getToken()
     if (token) finalHeaders.set('Authorization', `Bearer ${token}`)
   }
-  const res = await fetch(`${API_BASE}${path}`, { ...rest, headers: finalHeaders })
+  const init: RequestInit = { ...rest, headers: finalHeaders }
+  const res = await fetch(`${API_BASE}${path}`, init)
   if (!res.ok) {
     let message = `HTTP ${res.status}`
     try {
@@ -180,18 +204,17 @@ export const api = {
       request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify(payload), auth: false }),
     register: (payload: { email: string; password: string; fullName: string; phone?: string }) =>
       request<AuthResponse>('/api/auth/register', { method: 'POST', body: JSON.stringify(payload), auth: false }),
+    changePassword: (payload: ChangePasswordPayload) =>
+      request<void>('/api/auth/change-password', { method: 'POST', body: JSON.stringify(payload) }),
     me: () => request<UserMe>('/api/auth/me'),
+  },
+  catalog: {
+    services: () => request<ServiceItem[]>('/api/public/catalog/services', { auth: false }),
+    parts: () => request<PublicPartItem[]>('/api/public/catalog/parts', { auth: false }),
   },
   customer: {
     vehicles: () => request<Vehicle[]>('/api/customer/vehicles'),
     bookings: () => request<Booking[]>('/api/customer/bookings'),
-    createBooking: (payload: {
-      vehicleId: number
-      serviceTypeLabel: string
-      requestedDate: string
-      timeSlot?: string
-      notes?: string
-    }) => request<Booking>('/api/customer/bookings', { method: 'POST', body: JSON.stringify(payload) }),
     repairOrders: () => request<RepairOrder[]>('/api/customer/repair-orders'),
     repairProgress: (id: number) => request<ProgressEvent[]>(`/api/customer/repair-orders/${id}/progress`),
     quotes: () => request<Quote[]>('/api/customer/quotes'),
@@ -210,16 +233,76 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ transactionRef }),
       }),
+    createVnpayPayment: (payload: { repairOrderId: number; quoteId?: number; amount: number; orderInfo?: string }) =>
+      request<{ paymentUrl: string; paymentRef: string }>('/api/customer/vnpay/create', { method: 'POST', body: JSON.stringify(payload) }),
     createRating: (payload: { repairOrderId: number; rating: number; comment?: string }) =>
       request('/api/customer/ratings', { method: 'POST', body: JSON.stringify(payload) }),
+    createBooking: (payload: {
+      vehicleId?: number | null
+      licensePlate: string
+      brand?: string
+      model?: string
+      year?: number | null
+      vin?: string
+      color?: string
+      serviceTypeLabel: string
+      requestedDate: string
+      timeSlot?: string
+      notes?: string
+    }) => request<Booking>('/api/customer/bookings', { method: 'POST', body: JSON.stringify(payload) }),
   },
   staff: {
+    bookings: () => request<Booking[]>('/api/staff/bookings'),
     repairOrders: () => request<RepairOrder[]>('/api/staff/repair-orders?scope=mine'),
+    repairOrder: (id: number) => request<RepairOrderResponse>(`/api/staff/repair-orders/${id}`),
+    repairProgress: (id: number) => request<ProgressEvent[]>(`/api/staff/repair-orders/${id}/progress`),
+    updateRepairStatus: (id: number, payload: { status: string; progressNotes?: string }) =>
+      request<RepairOrderResponse>(`/api/staff/repair-orders/${id}/status`, { method: 'PUT', body: JSON.stringify(payload) }),
+    addRepairProgress: (id: number, payload: { message: string; stepLabel: string }) =>
+      request<void>(`/api/staff/repair-orders/${id}/progress`, { method: 'POST', body: JSON.stringify(payload) }),
+    completeWork: (id: number) => request<RepairOrderResponse>(`/api/staff/repair-orders/${id}/complete-work`, { method: 'POST' }),
+    handover: (id: number) => request<RepairOrderResponse>(`/api/staff/repair-orders/${id}/handover`, { method: 'POST' }),
+    partsRequests: (repairOrderId: number) =>
+      request<Array<{ id: number; requestNumber: string; repairOrderId: number; status: string; adminNote?: string; createdAt?: string; fulfilledAt?: string; lines: Array<{ id: number; partId: number; partName: string; partSku: string; quantityRequested: number; quantityIssued: number }> }>>(
+        `/api/staff/repair-orders/${repairOrderId}/parts-requests`,
+      ),
+    createPartsRequest: (payload: { repairOrderId: number; lines: Array<{ partId: number; quantityRequested: number }> }) =>
+      request(`/api/staff/parts-requests`, { method: 'POST', body: JSON.stringify(payload) }),
+    quotesForRepairOrder: (repairOrderId: number) => request<Quote[]>(`/api/staff/repair-orders/${repairOrderId}/quotes`),
+    createQuoteDraft: (repairOrderId: number) =>
+      request<Quote>(`/api/staff/repair-orders/${repairOrderId}/quotes`, { method: 'POST' }),
+    saveQuoteLines: (quoteId: number, payload: { taxRate: number; staffNotes?: string; lines: Array<{ lineType: 'LABOR' | 'PART'; serviceCatalogId?: number | null; partId?: number | null; description: string; quantity: number; unitPrice: number }> }) =>
+      request<Quote>(`/api/staff/quotes/${quoteId}/lines`, { method: 'PUT', body: JSON.stringify(payload) }),
+    sendQuote: (quoteId: number) => request<Quote>(`/api/staff/quotes/${quoteId}/send`, { method: 'POST' }),
+    createRepairIntake: (payload: {
+      customerId: number
+      vehicleId: number
+      bookingId?: number | null
+      assignedStaffId?: number | null
+      intakeNotes?: string
+    }) => request<RepairOrderResponse>('/api/staff/repair-orders/intake', { method: 'POST', body: JSON.stringify(payload) }),
   },
   admin: {
     dashboard: () => request<DashboardResponse>('/api/admin/dashboard'),
     employees: () => request<Employee[]>('/api/admin/employees'),
+    createEmployee: (payload: { email: string; password: string; fullName: string; phone?: string; employeeCode: string; position?: string }) =>
+      request<Employee>('/api/admin/employees', { method: 'POST', body: JSON.stringify(payload) }),
+    updateEmployee: (id: number, payload: { email: string; password?: string; fullName: string; phone?: string; employeeCode: string; position?: string }) =>
+      request<Employee>(`/api/admin/employees/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    deleteEmployee: (id: number) => request<void>(`/api/admin/employees/${id}`, { method: 'DELETE' }),
     parts: () => request<Part[]>('/api/admin/parts'),
+    createPart: (payload: {
+      sku: string
+      name: string
+      description?: string
+      unitPrice: number
+      quantityOnHand: number
+      minStock: number
+      category?: string
+      active: boolean
+    }) => request<Part>('/api/admin/parts', { method: 'POST', body: JSON.stringify(payload) }),
+    inventoryStats: () => request<{ totalParts: number; lowStockPartsCount: number; outOfStockPartsCount: number; recentInwardCount: number }>('/api/admin/inventory/stats'),
+    inventoryMovements: () => request<Array<{ id: number; sku: string; name: string; movementType: 'IN' | 'OUT' | 'ADJUST'; quantity: number; note?: string; createdAt: string }>>('/api/admin/inventory/movements'),
     services: () => request<ServiceItem[]>('/api/admin/service-catalog'),
     revenue: (from?: string, to?: string) => {
       const q = new URLSearchParams()
@@ -228,6 +311,10 @@ export const api = {
       return request<RevenueReport>(`/api/admin/revenue${q.size ? `?${q.toString()}` : ''}`)
     },
     notifications: () => request<NotificationSetting[]>('/api/admin/notification-settings'),
+    partsRequests: () => request<Array<{ id: number; requestNumber: string; repairOrderId: number; requestedByStaffId: number; status: 'PENDING' | 'APPROVED' | 'FULFILLED' | 'REJECTED'; adminNote?: string; createdAt: string; fulfilledAt?: string; lines: Array<{ id: number; partId: number; partName: string; partSku: string; quantityRequested: number; quantityIssued: number }> }>>('/api/admin/parts-requests'),
+    approvePartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/approve`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
+    fulfillPartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/fulfill`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
+    rejectPartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/reject`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
   },
 }
 

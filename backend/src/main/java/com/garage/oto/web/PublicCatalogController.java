@@ -1,5 +1,6 @@
 package com.garage.oto.web;
 
+import com.garage.oto.dto.catalog.PublicPartResponse;
 import com.garage.oto.dto.catalog.PublicServiceResponse;
 import com.garage.oto.service.PublicCatalogService;
 import java.util.List;
@@ -18,5 +19,10 @@ public class PublicCatalogController {
   @GetMapping("/services")
   public List<PublicServiceResponse> listServices() {
     return publicCatalogService.listActiveServices();
+  }
+
+  @GetMapping("/parts")
+  public List<PublicPartResponse> listParts() {
+    return publicCatalogService.listActiveParts();
   }
 }

@@ -3,6 +3,7 @@ package com.garage.oto.service;
 import com.garage.oto.domain.Role;
 import com.garage.oto.domain.User;
 import com.garage.oto.dto.auth.AuthResponse;
+import com.garage.oto.dto.auth.ChangePasswordRequest;
 import com.garage.oto.dto.auth.LoginRequest;
 import com.garage.oto.dto.auth.RegisterRequest;
 import com.garage.oto.dto.auth.UserMeResponse;
@@ -61,6 +62,14 @@ public class AuthService {
             .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
     String token = jwtService.generateToken(u.getEmail());
     return new AuthResponse(token, u.getId(), u.getEmail(), u.getFullName(), u.getRole());
+  }
+
+  @Transactional
+  public void changePassword(User user, ChangePasswordRequest req) {
+    authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(user.getEmail(), req.currentPassword()));
+    user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+    userRepository.save(user);
   }
 
   public UserMeResponse me(User user) {

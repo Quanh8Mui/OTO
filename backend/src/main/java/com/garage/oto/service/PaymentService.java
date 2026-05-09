@@ -69,6 +69,46 @@ public class PaymentService {
   }
 
   @Transactional
+  public Payment createVnpayPending(User customer, com.garage.oto.dto.payment.VnpayCreateRequest req) {
+    RepairOrder ro =
+        repairOrderRepository.findById(req.repairOrderId()).orElseThrow(() -> notFoundRo());
+    if (!ro.getCustomer().getId().equals(customer.getId())) {
+      throw new ApiException(HttpStatus.FORBIDDEN, "Forbidden");
+    }
+    Quote q = null;
+    if (req.quoteId() != null) {
+      q = quoteRepository.findById(req.quoteId()).orElseThrow(() -> notFoundQuote());
+      if (!q.getRepairOrder().getId().equals(ro.getId())) {
+        throw new ApiException(HttpStatus.BAD_REQUEST, "Quote does not match repair order");
+      }
+    }
+    Payment p = new Payment();
+    p.setPaymentNumber(documentNumberService.nextPaymentNumber());
+    p.setRepairOrder(ro);
+    p.setQuote(q);
+    p.setAmount(req.amount());
+    p.setMethod(com.garage.oto.domain.PaymentMethod.ONLINE);
+    p.setStatus(PaymentStatus.PENDING);
+    paymentRepository.save(p);
+    return p;
+  }
+
+  @Transactional
+  public PaymentResponse completeByPaymentNumber(String paymentNumber, String transactionRef) {
+    Payment p = paymentRepository.findAll().stream()
+        .filter(item -> paymentNumber.equals(item.getPaymentNumber()))
+        .findFirst()
+        .orElseThrow(this::notFoundPay);
+    if (p.getStatus() != PaymentStatus.PENDING) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Payment already finalized");
+    }
+    p.setStatus(PaymentStatus.COMPLETED);
+    p.setTransactionRef(transactionRef);
+    p.setPaidAt(Instant.now());
+    return toResponse(p);
+  }
+
+  @Transactional
   public PaymentResponse complete(User customer, Long paymentId, PaymentCompleteRequest req) {
     Payment p = paymentRepository.findById(paymentId).orElseThrow(() -> notFoundPay());
     if (!p.getRepairOrder().getCustomer().getId().equals(customer.getId())) {

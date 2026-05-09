@@ -3,6 +3,7 @@ package com.garage.oto.web;
 import com.garage.oto.dto.parts.PartsRequestResponse;
 import com.garage.oto.dto.parts.PartsRequestReviewRequest;
 import com.garage.oto.service.PartsRequestService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,26 +22,26 @@ public class AdminPartsRequestController {
 
   private final PartsRequestService partsRequestService;
 
-  @GetMapping("/pending")
-  public List<PartsRequestResponse> pending() {
-    return partsRequestService.listPending();
+  @GetMapping
+  public List<PartsRequestResponse> list() {
+    return partsRequestService.listAll();
   }
 
   @PostMapping("/{id}/approve")
   public PartsRequestResponse approve(
-      @PathVariable Long id, @RequestBody(required = false) PartsRequestReviewRequest req) {
-    return partsRequestService.approve(id, req != null ? req : new PartsRequestReviewRequest(null));
-  }
-
-  @PostMapping("/{id}/reject")
-  public PartsRequestResponse reject(
-      @PathVariable Long id, @RequestBody(required = false) PartsRequestReviewRequest req) {
-    return partsRequestService.reject(id, req != null ? req : new PartsRequestReviewRequest(null));
+      @PathVariable Long id, @Valid @RequestBody PartsRequestReviewRequest req) {
+    return partsRequestService.approve(id, req);
   }
 
   @PostMapping("/{id}/fulfill")
   public PartsRequestResponse fulfill(
-      @PathVariable Long id, @RequestBody(required = false) PartsRequestReviewRequest req) {
-    return partsRequestService.fulfill(id, req != null ? req : new PartsRequestReviewRequest(null));
+      @PathVariable Long id, @Valid @RequestBody PartsRequestReviewRequest req) {
+    return partsRequestService.fulfill(id, req);
+  }
+
+  @PostMapping("/{id}/reject")
+  public PartsRequestResponse reject(
+      @PathVariable Long id, @Valid @RequestBody PartsRequestReviewRequest req) {
+    return partsRequestService.reject(id, req);
   }
 }

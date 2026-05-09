@@ -28,9 +28,29 @@ public class VehicleService {
 
   @Transactional
   public VehicleResponse create(User customer, VehicleRequest req) {
+    Vehicle v = createVehicle(customer, req);
+    return toResponse(v);
+  }
+
+  @Transactional
+  public Vehicle createForBooking(User customer, com.garage.oto.dto.booking.BookingRequest req) {
+    VehicleRequest vehicleRequest = new VehicleRequest(req.licensePlate(), req.brand(), req.model(), req.year(), req.vin(), req.color());
+    return createVehicle(customer, vehicleRequest);
+  }
+
+  public java.util.Optional<Vehicle> findByCustomerAndLicensePlate(User customer, String licensePlate) {
+    return vehicleRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId()).stream()
+        .filter(v -> v.getLicensePlate().equalsIgnoreCase(licensePlate))
+        .findFirst();
+  }
+
+  private Vehicle createVehicle(User customer, VehicleRequest req) {
     if (vehicleRepository.existsByCustomerIdAndLicensePlateIgnoreCase(
         customer.getId(), req.licensePlate())) {
-      throw new ApiException(HttpStatus.CONFLICT, "Vehicle with this plate already exists");
+      return vehicleRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId()).stream()
+          .filter(v -> v.getLicensePlate().equalsIgnoreCase(req.licensePlate().trim()))
+          .findFirst()
+          .orElseThrow(() -> new ApiException(HttpStatus.CONFLICT, "Vehicle with this plate already exists"));
     }
     Vehicle v = new Vehicle();
     v.setCustomer(customer);
@@ -41,7 +61,7 @@ public class VehicleService {
     v.setVin(req.vin());
     v.setColor(req.color());
     vehicleRepository.save(v);
-    return toResponse(v);
+    return v;
   }
 
   @Transactional
