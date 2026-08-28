@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, type ServiceItem } from '../../lib/api'
+import { useToast } from '../../context/ToastContext'
 
 function formatDateInput(date = new Date()) {
   const local = new Date(date)
@@ -25,12 +26,15 @@ export function BookAppointment() {
   const [loading, setLoading] = useState(false)
   const [nowLabel, setNowLabel] = useState(() => new Date().toLocaleString('vi-VN'))
   const todayLabel = useMemo(() => new Date(requestedDate || formatDateInput()).toLocaleDateString('vi-VN'), [requestedDate])
+  const { showToast } = useToast()
 
   useEffect(() => {
     api.catalog.services().then((services) => {
       setCatalogServices(services)
       if (services[0]) setServiceTypeLabel(services[0].name)
-    }).catch(() => {})
+    }).catch((err) => {
+      showToast(err instanceof Error ? err.message : 'Không thể tải danh mục dịch vụ')
+    })
   }, [])
 
   useEffect(() => {

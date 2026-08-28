@@ -3,15 +3,65 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8
-    container_name: mysql_oto
-    restart: always
+    container_name: oto_mysql
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: oto
+      MYSQL_USER: oto_user
+      MYSQL_PASSWORD: oto_password
     ports:
-        - "3308:3306"
+      - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - oto_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: oto_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: oto
+      DB_USER: oto_user
+      DB_PASSWORD: oto_password
+      SERVER_PORT: 8080
+      JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      CORS_ORIGINS: http://localhost,http://localhost:80,http://localhost:5173
+    ports:
+      - "8080:8080"
+    networks:
+      - oto_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: oto_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "5173:80"
+    networks:
+      - oto_network
 
 volumes:
   mysql_data:
+
+networks:
+  oto_network:
+    driver: bridge

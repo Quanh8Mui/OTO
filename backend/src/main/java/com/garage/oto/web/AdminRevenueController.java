@@ -1,10 +1,12 @@
 package com.garage.oto.web;
 
+import com.garage.oto.dto.admin.DailyRevenueItem;
 import com.garage.oto.dto.admin.RevenueReportResponse;
 import com.garage.oto.service.RevenueService;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,4 +33,15 @@ public class AdminRevenueController {
     Instant end = t.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
     return revenueService.report(start, end);
   }
+
+  /** Daily revenue breakdown for charts. Defaults to last 7 days. */
+  @GetMapping("/daily")
+  public List<DailyRevenueItem> daily(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+    LocalDate t = to != null ? to : LocalDate.now(ZoneOffset.UTC);
+    LocalDate f = from != null ? from : t.minusDays(6);
+    return revenueService.dailyRevenue(f, t);
+  }
 }
+

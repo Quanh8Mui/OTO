@@ -172,6 +172,12 @@ export type RevenueReport = {
   paymentCount: number
 }
 
+export type DailyRevenueItem = {
+  date: string
+  revenue: number
+  paymentCount: number
+}
+
 export type ChangePasswordPayload = { currentPassword: string; newPassword: string }
 
 type RequestOptions = RequestInit & { auth?: boolean }
@@ -350,6 +356,12 @@ export const api = {
       if (from) q.set('from', from)
       if (to) q.set('to', to)
       return request<RevenueReport>(`/api/admin/revenue${q.size ? `?${q.toString()}` : ''}`)
+    },
+    dailyRevenue: (from?: string, to?: string) => {
+      const q = new URLSearchParams()
+      if (from) q.set('from', from)
+      if (to) q.set('to', to)
+      return request<DailyRevenueItem[]>(`/api/admin/revenue/daily${q.size ? `?${q.toString()}` : ''}`)
     },
     notifications: () => request<NotificationSetting[]>('/api/admin/notification-settings'),
     updateNotification: (id: number, payload: { enabled: boolean; channel?: string; templateSubject?: string; templateBody?: string }) =>

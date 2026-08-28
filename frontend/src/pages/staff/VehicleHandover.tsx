@@ -146,21 +146,103 @@ export function VehicleHandover() {
                   placeholder="Hướng dẫn tái kiểm tra sau 500km..."
                 />
               </div>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => void submitHandover()}
-                disabled={submitting || !allChecked}
-              >
-                {submitting ? 'Đang xử lý...' : 'Đóng RO & bàn giao xe'}
-              </button>
+              <div className="row-between no-print" style={{ marginTop: '1rem', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => window.print()}
+                >
+                  📄 In biên bản bàn giao
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => void submitHandover()}
+                  disabled={submitting || !allChecked}
+                >
+                  {submitting ? 'Đang xử lý...' : 'Đóng RO & bàn giao xe'}
+                </button>
+              </div>
             </>
           ) : (
             <p className="muted">Chọn RO từ danh sách bên trái.</p>
           )}
-          {message ? <p className="muted" style={{ marginTop: '1rem' }}>{message}</p> : null}
+          {message ? <p className="muted no-print" style={{ marginTop: '1rem' }}>{message}</p> : null}
         </div>
       </div>
+
+      {/* Printable Vehicle Handover Report */}
+      {selectedOrder ? (
+        <div className="print-only" style={{ marginTop: '20px' }}>
+          <div className="print-header">
+            <div>
+              <h1 className="print-title">GARAGE OTO SERVICES</h1>
+              <p style={{ margin: '4px 0', fontSize: '10pt', color: '#4b5563' }}>
+                Địa chỉ: 123 Đường Số 1, TP. Hồ Chí Minh | Hotline: 1900 8888
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <h2 style={{ fontSize: '14pt', margin: 0, color: '#111827' }}>BIÊN BẢN BÀN GIAO XE</h2>
+              <p style={{ margin: '4px 0', fontSize: '10pt' }}>
+                Số RO: <strong>{selectedOrder.orderNumber}</strong>
+              </p>
+              <p style={{ margin: '2px 0', fontSize: '10pt' }}>
+                Ngày bàn giao: {handoverAt ? new Date(handoverAt).toLocaleString('vi-VN') : new Date().toLocaleDateString('vi-VN')}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '16px', fontSize: '10pt' }}>
+            <p style={{ margin: '4px 0' }}>Khách hàng: <strong>{selectedOrder.customerName}</strong></p>
+            <p style={{ margin: '4px 0' }}>Biển số xe: <strong>{selectedOrder.licensePlate}</strong></p>
+            <p style={{ margin: '4px 0' }}>Kỹ thuật viên phụ trách: <strong>{selectedOrder.assignedStaffName || 'Đội ngũ kỹ thuật OTO'}</strong></p>
+            <p style={{ margin: '4px 0' }}>Ghi chú tiếp nhận: {selectedOrder.intakeNotes || 'Không có'}</p>
+            <p style={{ margin: '4px 0' }}>Ghi chú bàn giao: {handoverNote || 'Xe hoạt động bình thường, đã kiểm tra hoàn tất.'}</p>
+          </div>
+
+          <h3 style={{ fontSize: '11pt', borderBottom: '1px solid #111', paddingBottom: '4px', margin: '16px 0 8px' }}>
+            DANH MỤC KIỂM TRA TRƯỚC KHI BÀN GIAO (CHECKLIST)
+          </h3>
+          <table className="data" style={{ marginBottom: '20px' }}>
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Hạng mục kiểm tra</th>
+                <th>Kết quả</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CHECKLIST_ITEMS.map((item, idx) => (
+                <tr key={item}>
+                  <td style={{ width: '40px', textAlign: 'center' }}>{idx + 1}</td>
+                  <td>{item}</td>
+                  <td style={{ width: '120px', textAlign: 'center', fontWeight: 600, color: checked[item] ? '#059669' : '#dc2626' }}>
+                    {checked[item] ? '✓ Đạt yêu cầu' : 'Chưa kiểm tra'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="print-signatures">
+            <div className="print-signature-box">
+              <strong>Khách hàng nhận xe</strong>
+              <p style={{ fontSize: '9pt', color: '#6b7280', margin: '2px 0' }}>(Ký và ghi rõ họ tên)</p>
+              <div className="print-signature-space" />
+            </div>
+            <div className="print-signature-box">
+              <strong>Kỹ thuật viên bàn giao</strong>
+              <p style={{ fontSize: '9pt', color: '#6b7280', margin: '2px 0' }}>(Ký và ghi rõ họ tên)</p>
+              <div className="print-signature-space" />
+            </div>
+            <div className="print-signature-box">
+              <strong>Đại diện Garage OTO</strong>
+              <p style={{ fontSize: '9pt', color: '#6b7280', margin: '2px 0' }}>(Ký và đóng dấu)</p>
+              <div className="print-signature-space" />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

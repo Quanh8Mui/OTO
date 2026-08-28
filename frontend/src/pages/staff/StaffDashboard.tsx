@@ -2,12 +2,16 @@ import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { RealtimeCalendar } from '../../components/RealtimeCalendar'
 import { api, type RepairOrder } from '../../lib/api'
+import { useToast } from '../../context/ToastContext'
 
 export function StaffDashboard() {
   const [orders, setOrders] = useState<RepairOrder[]>([])
+  const { showToast } = useToast()
 
   useEffect(() => {
-    api.staff.repairOrders().then(setOrders).catch(() => {})
+    api.staff.repairOrders().then(setOrders).catch((err) => {
+      showToast(err instanceof Error ? err.message : 'Không thể tải dữ liệu xưởng')
+    })
   }, [])
 
   const inProgress = useMemo(
@@ -36,8 +40,9 @@ export function StaffDashboard() {
           </div>
           <div className="card">
             <div className="stat">
-              <span className="stat-label">Yêu cầu kho mới</span>
-              <span className="stat-value">-</span>
+              <span className="stat-label">Cần phụ tùng</span>
+              <span className="stat-value">{orders.filter((x) => x.status === 'IN_PROGRESS' || x.status === 'PAUSED').length}</span>
+              <span className="muted">RO đang sửa / tạm dừng</span>
             </div>
           </div>
         </div>

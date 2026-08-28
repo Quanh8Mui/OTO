@@ -1,58 +1,73 @@
 # OTO — Hệ thống quản lý garage ô tô
 
-Ứng dụng web full-stack: đặt lịch khách hàng, vận hành xưởng, quản trị kho & báo cáo.
+Ứng dụng web full-stack hoàn chỉnh: Đặt lịch khách hàng, Vận hành xưởng, Quản trị kho phụ tùng & Báo cáo doanh thu.
 
-## Công nghệ
+## 🛠️ Công nghệ
 
 | Thành phần | Stack |
 |---|---|
-| Backend | Spring Boot 3.2, Java 17, MySQL, JWT |
-| Frontend | React 18, TypeScript, Vite |
-| API docs | Swagger UI tại `/swagger-ui.html` |
+| **Backend** | Spring Boot 3.2, Java 17, Spring Security + JWT, JPA / Hibernate, Flyway, MySQL 8 |
+| **Frontend** | React 18, TypeScript, Vite, Recharts, XLSX |
+| **Container** | Docker & Docker Compose (Multi-stage build Backend + Nginx Frontend) |
+| **API Docs** | Swagger UI tại `/swagger-ui.html` |
 
-## Chạy local
+---
 
-### 1. Database (Docker)
+## 🚀 Cách Chạy Dự Án
+
+### Cách 1: Chạy toàn bộ với Docker (Khuyên dùng - 1 lệnh duy nhất)
 
 ```bash
-docker compose up -d
+docker compose up --build -d
 ```
 
-MySQL chạy tại `localhost:3308`, database `oto`, user `root`, password `123456`.
+* **Frontend UI**: `http://localhost:5173` hoặc `http://localhost`
+* **Backend API & Swagger**: `http://localhost:8080/swagger-ui.html`
+* **MySQL Database**: `localhost:3308` (Database: `oto`)
 
-### 2. Backend
+---
 
+### Cách 2: Chạy thủ công từng phần (Dev Mode)
+
+#### 1. Database (Docker)
+```bash
+docker compose up mysql -d
+```
+
+#### 2. Backend (Terminal 1)
 ```bash
 cd backend
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+mvn spring-boot:run
 ```
-
 API: `http://localhost:8080`
 
-### 3. Frontend
-
+#### 3. Frontend (Terminal 2)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+UI: `http://localhost:5173` (Vite tự proxy `/api` → backend)
 
-UI: `http://localhost:5173` (proxy `/api` → backend)
+---
 
-## Tài khoản demo (profile `dev`)
+## 🔑 Tài khoản demo
 
-| Email | Mật khẩu | Vai trò |
+| Vai trò | Email | Mật khẩu |
 |---|---|---|
-| `customer1@garage.local` | `Customer@123` | Khách hàng |
-| `staff@garage.local` | `Staff@123` | Nhân viên |
-| `admin@garage.local` | `Admin@123` | Quản trị |
+| 🧑 **Khách hàng** | `customer1@garage.local` | `Customer@123` |
+| 👷 **Nhân viên** | `staff@garage.local` | `Staff@123` |
+| 🔧 **Quản trị viên** | `admin@garage.local` | `Admin@123` |
 
-## Cấu trúc
+---
 
-```
-OTO/
-├── backend/     # REST API
-├── frontend/    # Giao diện web (3 phân hệ: customer / staff / admin)
-├── docs/        # Sơ đồ nghiệp vụ (Mermaid)
-└── docker-compose.yml
-```
+## 🌟 Tính Năng Nổi Bật
+
+* **Biểu đồ thời gian thực (Recharts)**: Doanh thu 7 ngày, tỷ lệ trạng thái lệnh sửa chữa RO trên Admin Dashboard.
+* **Xuất báo cáo Excel (.xlsx)**: Xuất file bảng kê chi tiết doanh thu từng ngày.
+* **In / Xuất PDF chuẩn Garage**:
+  * Sổ lịch sử dịch vụ & bảo dưỡng xe.
+  * Phiếu báo giá dịch vụ & phụ tùng (kèm bảng thuế VAT & chữ ký khách hàng).
+  * Biên bản bàn giao & nghiệm thu xe (kèm checklist kiểm tra kỹ thuật).
+* **Cổng thanh toán**: Tích hợp thanh toán tiền mặt & VNPay QR Code.
+

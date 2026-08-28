@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, type ProgressEvent, type RepairOrder } from '../../lib/api'
 import { formatDate } from '../../lib/format'
+import { useToast } from '../../context/ToastContext'
 
 const STATUS_PROGRESS: Record<string, number> = {
   INTAKE: 10,
@@ -18,6 +19,7 @@ export function RepairStatus() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [events, setEvents] = useState<ProgressEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const { showToast } = useToast()
 
   const order = useMemo(
     () => orders.find((o) => o.id === selectedOrderId) ?? orders[0] ?? null,
@@ -40,7 +42,9 @@ export function RepairStatus() {
         setOrders(data)
         if (data[0]) setSelectedOrderId(data[0].id)
       })
-      .catch(() => {})
+      .catch((err) => {
+        showToast(err instanceof Error ? err.message : 'Không thể tải trạng thái sửa chữa')
+      })
       .finally(() => {
         if (active) setLoading(false)
       })

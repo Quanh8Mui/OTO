@@ -29,4 +29,13 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
       @Param("status") PaymentStatus status,
       @Param("from") Instant from,
       @Param("to") Instant to);
+
+  @Query(
+      "SELECT CAST(p.paidAt AS LocalDate) AS day, COALESCE(SUM(p.amount), 0), COUNT(p) "
+          + "FROM Payment p WHERE p.status = :status AND p.paidAt >= :from AND p.paidAt < :to "
+          + "GROUP BY CAST(p.paidAt AS LocalDate) ORDER BY day")
+  java.util.List<Object[]> dailyRevenue(
+      @Param("status") PaymentStatus status,
+      @Param("from") Instant from,
+      @Param("to") Instant to);
 }
