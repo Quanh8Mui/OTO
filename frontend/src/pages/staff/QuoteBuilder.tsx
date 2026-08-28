@@ -71,7 +71,7 @@ export function QuoteBuilder() {
         setQuote(latest)
         if (latest) {
           setLines(latest.lines.map((line) => ({ id: String(line.id), lineType: line.lineType, description: line.description, quantity: line.quantity, unitPrice: line.unitPrice })))
-          setTaxRate(Number((Number(latest.taxRate) * 100).toFixed(2)))
+          setTaxRate(Number(latest.taxRate ?? 10))
           setStaffNotes(latest.staffNotes ?? '')
         } else {
           setQuote(null)

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api } from '../../lib/api'
+import { api, type ServiceItem } from '../../lib/api'
 
 function formatDateInput(date = new Date()) {
   const local = new Date(date)
@@ -17,6 +17,7 @@ export function BookAppointment() {
   const [vin, setVin] = useState('')
   const [color, setColor] = useState('')
   const [serviceTypeLabel, setServiceTypeLabel] = useState('Bảo dưỡng định kỳ')
+  const [catalogServices, setCatalogServices] = useState<ServiceItem[]>([])
   const [requestedDate, setRequestedDate] = useState(() => formatDateInput())
   const [timeSlot, setTimeSlot] = useState('08:00 – 10:00')
   const [notes, setNotes] = useState('')
@@ -24,6 +25,13 @@ export function BookAppointment() {
   const [loading, setLoading] = useState(false)
   const [nowLabel, setNowLabel] = useState(() => new Date().toLocaleString('vi-VN'))
   const todayLabel = useMemo(() => new Date(requestedDate || formatDateInput()).toLocaleDateString('vi-VN'), [requestedDate])
+
+  useEffect(() => {
+    api.catalog.services().then((services) => {
+      setCatalogServices(services)
+      if (services[0]) setServiceTypeLabel(services[0].name)
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -102,10 +110,20 @@ export function BookAppointment() {
           <div className="field">
             <label>Loại dịch vụ</label>
             <select value={serviceTypeLabel} onChange={(e) => setServiceTypeLabel(e.target.value)}>
-              <option>Bảo dưỡng định kỳ</option>
-              <option>Sửa chữa theo yêu cầu</option>
-              <option>Đồng sơn / va chạm</option>
-              <option>Kiểm tra tổng quát</option>
+              {catalogServices.length > 0 ? (
+                catalogServices.map((s) => (
+                  <option key={s.id} value={s.name}>
+                    {s.name}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option>Bảo dưỡng định kỳ</option>
+                  <option>Sửa chữa theo yêu cầu</option>
+                  <option>Đồng sơn / va chạm</option>
+                  <option>Kiểm tra tổng quát</option>
+                </>
+              )}
             </select>
           </div>
           <div className="field">

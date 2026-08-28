@@ -5,6 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
       // Support assets referenced by Swagger UI (/swagger-ui/**)
       '/swagger-ui': {
         target: 'http://localhost:8080',

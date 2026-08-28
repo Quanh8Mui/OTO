@@ -1,6 +1,6 @@
 export type Role = 'CUSTOMER' | 'STAFF' | 'ADMIN'
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8080'
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
 const TOKEN_KEY = 'oto_auth_token'
 
 export type AuthResponse = {
@@ -84,6 +84,8 @@ export type Quote = {
   quoteNumber: string
   repairOrderId: number
   status: 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | 'EXPIRED'
+  taxRate?: number
+  staffNotes?: string
   grandTotal: number
   rejectedReason?: string
   lines: QuoteLine[]
@@ -121,9 +123,12 @@ export type Part = {
   id: number
   sku: string
   name: string
+  description?: string
+  unitPrice?: number
   quantityOnHand: number
   minStock: number
   category?: string
+  active?: boolean
 }
 
 export type StockStatus = 'OK' | 'LOW' | 'OUT'
@@ -134,6 +139,7 @@ export type ServiceItem = {
   name: string
   description?: string
   basePrice: number
+  active?: boolean
 }
 
 export type PublicPartItem = {
@@ -147,6 +153,16 @@ export type NotificationSetting = {
   id: number
   eventKey: string
   enabled: boolean
+  channel?: string
+  templateSubject?: string
+  templateBody?: string
+}
+
+export type StaffSchedule = {
+  id: number
+  dayOfWeek: number
+  startTime: string
+  endTime: string
 }
 
 export type RevenueReport = {
@@ -253,7 +269,12 @@ export const api = {
   },
   staff: {
     bookings: () => request<Booking[]>('/api/staff/bookings'),
+    schedules: () => request<StaffSchedule[]>('/api/staff/schedules'),
+    createSchedule: (payload: { dayOfWeek: number; startTime: string; endTime: string }) =>
+      request<StaffSchedule>('/api/staff/schedules', { method: 'POST', body: JSON.stringify(payload) }),
+    deleteSchedule: (id: number) => request<void>(`/api/staff/schedules/${id}`, { method: 'DELETE' }),
     repairOrders: () => request<RepairOrder[]>('/api/staff/repair-orders?scope=mine'),
+    repairOrdersAll: () => request<RepairOrder[]>('/api/staff/repair-orders?scope=all'),
     repairOrder: (id: number) => request<RepairOrderResponse>(`/api/staff/repair-orders/${id}`),
     repairProgress: (id: number) => request<ProgressEvent[]>(`/api/staff/repair-orders/${id}/progress`),
     updateRepairStatus: (id: number, payload: { status: string; progressNotes?: string }) =>
@@ -301,9 +322,29 @@ export const api = {
       category?: string
       active: boolean
     }) => request<Part>('/api/admin/parts', { method: 'POST', body: JSON.stringify(payload) }),
+    updatePart: (
+      id: number,
+      payload: {
+        sku: string
+        name: string
+        description?: string
+        unitPrice: number
+        quantityOnHand: number
+        minStock: number
+        category?: string
+        active: boolean
+      },
+    ) => request<Part>(`/api/admin/parts/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
     inventoryStats: () => request<{ totalParts: number; lowStockPartsCount: number; outOfStockPartsCount: number; recentInwardCount: number }>('/api/admin/inventory/stats'),
     inventoryMovements: () => request<Array<{ id: number; sku: string; name: string; movementType: 'IN' | 'OUT' | 'ADJUST'; quantity: number; note?: string; createdAt: string }>>('/api/admin/inventory/movements'),
     services: () => request<ServiceItem[]>('/api/admin/service-catalog'),
+    createService: (payload: { code: string; name: string; description?: string; basePrice: number; active: boolean }) =>
+      request<ServiceItem>('/api/admin/service-catalog', { method: 'POST', body: JSON.stringify(payload) }),
+    updateService: (
+      id: number,
+      payload: { code: string; name: string; description?: string; basePrice: number; active: boolean },
+    ) => request<ServiceItem>(`/api/admin/service-catalog/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    deleteService: (id: number) => request<void>(`/api/admin/service-catalog/${id}`, { method: 'DELETE' }),
     revenue: (from?: string, to?: string) => {
       const q = new URLSearchParams()
       if (from) q.set('from', from)
@@ -311,6 +352,8 @@ export const api = {
       return request<RevenueReport>(`/api/admin/revenue${q.size ? `?${q.toString()}` : ''}`)
     },
     notifications: () => request<NotificationSetting[]>('/api/admin/notification-settings'),
+    updateNotification: (id: number, payload: { enabled: boolean; channel?: string; templateSubject?: string; templateBody?: string }) =>
+      request<NotificationSetting>(`/api/admin/notification-settings/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
     partsRequests: () => request<Array<{ id: number; requestNumber: string; repairOrderId: number; requestedByStaffId: number; status: 'PENDING' | 'APPROVED' | 'FULFILLED' | 'REJECTED'; adminNote?: string; createdAt: string; fulfilledAt?: string; lines: Array<{ id: number; partId: number; partName: string; partSku: string; quantityRequested: number; quantityIssued: number }> }>>('/api/admin/parts-requests'),
     approvePartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/approve`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
     fulfillPartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/fulfill`, { method: 'POST', body: JSON.stringify({ adminNote }) }),

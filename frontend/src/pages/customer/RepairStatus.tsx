@@ -1,36 +1,101 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api, type ProgressEvent, type RepairOrder } from '../../lib/api'
 import { formatDate } from '../../lib/format'
 
+const STATUS_PROGRESS: Record<string, number> = {
+  INTAKE: 10,
+  QUOTING: 25,
+  AWAITING_APPROVAL: 40,
+  IN_PROGRESS: 60,
+  PAUSED: 55,
+  COMPLETED: 90,
+  DELIVERED: 100,
+  CANCELLED: 0,
+}
+
 export function RepairStatus() {
-  const [order, setOrder] = useState<RepairOrder | null>(null)
+  const [orders, setOrders] = useState<RepairOrder[]>([])
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [events, setEvents] = useState<ProgressEvent[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const order = useMemo(
+    () => orders.find((o) => o.id === selectedOrderId) ?? orders[0] ?? null,
+    [orders, selectedOrderId],
+  )
+
+  const progressPercent = useMemo(() => {
+    if (!order) return 0
+    const base = STATUS_PROGRESS[order.status] ?? 20
+    const bonus = Math.min(events.length * 5, 15)
+    return Math.min(base + bonus, 100)
+  }, [order, events])
 
   useEffect(() => {
     let active = true
-    api.customer.repairOrders()
-      .then(async (orders) => {
-        if (!active || orders.length === 0) return
-        const ro = orders[0]
-        setOrder(ro)
-        const progress = await api.customer.repairProgress(ro.id)
-        if (active) setEvents(progress)
+    api.customer
+      .repairOrders()
+      .then((data) => {
+        if (!active) return
+        setOrders(data)
+        if (data[0]) setSelectedOrderId(data[0].id)
       })
       .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false)
+      })
     return () => {
       active = false
     }
   }, [])
 
+  useEffect(() => {
+    if (!order) {
+      setEvents([])
+      return
+    }
+    let active = true
+    api.customer
+      .repairProgress(order.id)
+      .then((progress) => {
+        if (active) setEvents(progress)
+      })
+      .catch(() => {
+        if (active) setEvents([])
+      })
+    return () => {
+      active = false
+    }
+  }, [order])
+
   return (
     <div className="page">
       <h1 className="page-title">Theo dõi trạng thái sửa chữa</h1>
-      <p className="page-desc">Tiến độ cập nhật từ xưởng (demo real-time sau khi nối WebSocket).</p>
+      <p className="page-desc">Chọn lệnh sửa chữa để xem tiến độ cập nhật từ xưởng.</p>
+
+      {loading ? <p className="muted">Đang tải...</p> : null}
+
+      {orders.length > 1 ? (
+        <div className="card" style={{ marginBottom: '1rem' }}>
+          <div className="field">
+            <label>Chọn lệnh sửa chữa</label>
+            <select value={order?.id ?? ''} onChange={(e) => setSelectedOrderId(Number(e.target.value))}>
+              {orders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.orderNumber} · {o.licensePlate} ({o.status})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ) : null}
 
       <div className="card" style={{ marginBottom: '1.25rem' }}>
         <div className="row-between">
           <div>
-            <div className="badge badge-amber" style={{ marginBottom: '0.5rem' }}>{order?.status ?? 'Đang tải'}</div>
+            <div className="badge badge-amber" style={{ marginBottom: '0.5rem' }}>
+              {order?.status ?? 'Chưa có RO'}
+            </div>
             <div style={{ fontWeight: 700 }}>
               {order?.orderNumber ?? '-'} · {order?.licensePlate ?? '-'}
             </div>
@@ -39,7 +104,7 @@ export function RepairStatus() {
           <div className="stat" style={{ textAlign: 'right' }}>
             <span className="stat-label">Tiến độ</span>
             <span className="stat-value" style={{ color: 'var(--info)' }}>
-              {events.length > 0 ? '80%' : '40%'}
+              {progressPercent}%
             </span>
           </div>
         </div>
@@ -47,7 +112,7 @@ export function RepairStatus() {
         <div style={{ height: 8, borderRadius: 999, background: 'var(--bg-deep)', overflow: 'hidden' }}>
           <div
             style={{
-              width: events.length > 0 ? '80%' : '40%',
+              width: `${progressPercent}%`,
               height: '100%',
               background: 'linear-gradient(90deg, var(--info), var(--accent))',
               borderRadius: 999,

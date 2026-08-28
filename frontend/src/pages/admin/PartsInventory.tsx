@@ -19,6 +19,7 @@ export function PartsInventory() {
   const [selectedSku, setSelectedSku] = useState('')
   const [quantity, setQuantity] = useState('')
   const [note, setNote] = useState('')
+  const [saving, setSaving] = useState(false)
 
   async function loadData() {
     setLoading(true)
@@ -67,13 +68,31 @@ export function PartsInventory() {
       setMessage('Vui lòng chọn SKU hiện có.')
       return
     }
-    if (!quantity || Number(quantity) <= 0) {
+    if (!quantity || Number(quantity) < 0) {
       setMessage('Vui lòng nhập số lượng hợp lệ.')
       return
     }
-    setParts((current) => current.map((p) => (p.sku === selectedPart.sku ? { ...p, quantityOnHand: Number(quantity) } : p)))
-    setMessage(`Đã điều chỉnh tồn ${selectedPart.name} về ${Number(quantity)}.`)
-    closeAction()
+    setSaving(true)
+    setMessage(null)
+    try {
+      await api.admin.updatePart(selectedPart.id, {
+        sku: selectedPart.sku,
+        name: selectedPart.name,
+        description: selectedPart.description,
+        unitPrice: selectedPart.unitPrice ?? 0,
+        quantityOnHand: Number(quantity),
+        minStock: selectedPart.minStock,
+        category: selectedPart.category,
+        active: selectedPart.active ?? true,
+      })
+      await loadData()
+      setMessage(`Đã điều chỉnh tồn ${selectedPart.name} về ${Number(quantity)}.`)
+      closeAction()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Không thể điều chỉnh tồn')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -116,7 +135,7 @@ export function PartsInventory() {
           <div className="field"><label>Ghi chú</label><textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Lý do / biên bản kiểm kê..." /></div>
           <div className="row-between">
             <span className="muted">{selectedPart ? `Đang điều chỉnh ${selectedPart.name} (${selectedPart.sku})` : 'Chọn một SKU hiện có để điều chỉnh.'}</span>
-            <button type="button" className="btn btn-primary" onClick={submitAction}>Xác nhận</button>
+            <button type="button" className="btn btn-primary" onClick={submitAction} disabled={saving}>{saving ? 'Đang lưu...' : 'Xác nhận'}</button>
           </div>
         </div>
       ) : null}

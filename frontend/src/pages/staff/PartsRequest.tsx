@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api, type Part, type RepairOrder } from '../../lib/api'
+import { api, type PublicPartItem, type RepairOrder } from '../../lib/api'
 
 type PartsRequestRow = {
   id: string
@@ -23,7 +23,7 @@ function statusBadge(status: string) {
 export function PartsRequest() {
   const [orders, setOrders] = useState<RepairOrder[]>([])
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
-  const [parts, setParts] = useState<Part[]>([])
+  const [parts, setParts] = useState<PublicPartItem[]>([])
   const [requests, setRequests] = useState<Array<{ id: number; requestNumber: string; repairOrderId: number; status: string; adminNote?: string; createdAt?: string; fulfilledAt?: string; lines: Array<{ id: number; partId: number; partName: string; partSku: string; quantityRequested: number; quantityIssued: number }> }>>([])
   const [rows, setRows] = useState<PartsRequestRow[]>([])
   const [message, setMessage] = useState<string | null>(null)
