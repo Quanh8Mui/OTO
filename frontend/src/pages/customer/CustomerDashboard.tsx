@@ -5,10 +5,10 @@ import { RealtimeCalendar } from '../../components/RealtimeCalendar'
 import { api, type Booking, type Quote, type RepairOrder } from '../../lib/api'
 
 const quick = [
-  { to: 'book', title: 'Đặt lịch mới', desc: 'Bảo dưỡng hoặc sửa chữa', icon: '📅' },
-  { to: 'status', title: 'Xe đang sửa', desc: 'Theo dõi tiến độ', icon: '🔧' },
-  { to: 'quotes', title: 'Báo giá', desc: 'Xem & duyệt', icon: '📋' },
-  { to: 'payment', title: 'Thanh toán', desc: 'Hoá đơn & ví', icon: '💳' },
+  { to: 'book', title: 'Đặt lịch mới', desc: 'Bảo dưỡng hoặc sửa chữa', icon: '' },
+  { to: 'status', title: 'Xe đang sửa', desc: 'Theo dõi tiến độ', icon: '' },
+  { to: 'quotes', title: 'Báo giá', desc: 'Xem & duyệt', icon: '' },
+  { to: 'payment', title: 'Thanh toán', desc: 'Hoá đơn & ví', icon: '' },
 ]
 
 export function CustomerDashboard() {

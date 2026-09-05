@@ -13,6 +13,7 @@ public class AppProperties {
 
   private final Jwt jwt = new Jwt();
   private final Cors cors = new Cors();
+  private final Vnpay vnpay = new Vnpay();
 
   @Getter
   @Setter
@@ -25,5 +26,13 @@ public class AppProperties {
   @Setter
   public static class Cors {
     private String allowedOrigins;
+  }
+
+  @Getter
+  @Setter
+  public static class Vnpay {
+    private String tmnCode = "VNPAYDEMO";
+    private String hashSecret = "";
+    private String payUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
   }
 }

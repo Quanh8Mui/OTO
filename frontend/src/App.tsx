@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { RoleLayout, type NavItem } from './components/RoleLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -29,6 +29,7 @@ import { PartCreate } from './pages/admin/PartCreate'
 import { ServiceCatalog } from './pages/admin/ServiceCatalog'
 import { RevenueReports } from './pages/admin/RevenueReports'
 import { NotificationSettings } from './pages/admin/NotificationSettings'
+import { AdminRatings } from './pages/admin/AdminRatings'
 import { ChangePassword as AdminChangePassword } from './pages/admin/ChangePassword'
 
 function SwaggerRedirect() {
@@ -36,6 +37,11 @@ function SwaggerRedirect() {
     window.location.assign('/swagger-ui/index.html')
   }, [])
   return null
+}
+
+function CustomerPaymentRedirect() {
+  const location = useLocation()
+  return <Navigate to={`/app/customer/payment${location.search}`} replace />
 }
 
 const customerNav: NavItem[] = [
@@ -68,6 +74,7 @@ const adminNav: NavItem[] = [
   { to: '/app/admin/parts/new', label: 'Thêm phụ tùng' },
   { to: '/app/admin/services', label: 'Dịch vụ & giá' },
   { to: '/app/admin/revenue', label: 'Báo cáo DT' },
+  { to: '/app/admin/ratings', label: 'Đánh giá KH' },
   { to: '/app/admin/notifications', label: 'Thông báo' },
   { to: '/app/admin/password', label: 'Đổi mật khẩu' },
 ]
@@ -127,11 +134,13 @@ export default function App() {
             <Route path="parts/new" element={<PartCreate />} />
             <Route path="services" element={<ServiceCatalog />} />
             <Route path="revenue" element={<RevenueReports />} />
+            <Route path="ratings" element={<AdminRatings />} />
             <Route path="notifications" element={<NotificationSettings />} />
             <Route path="password" element={<AdminChangePassword />} />
           </Route>
         </Route>
 
+        <Route path="/customer/payment" element={<CustomerPaymentRedirect />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

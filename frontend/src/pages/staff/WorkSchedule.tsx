@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { RealtimeCalendar } from '../../components/RealtimeCalendar'
 import { api, type Booking, type StaffSchedule } from '../../lib/api'
+import { formatStatus, getStatusBadgeClass } from '../../lib/format'
 
 const DAY_NAMES = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7']
 const TIME_SLOTS = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
@@ -132,7 +133,7 @@ export function WorkSchedule() {
                   ) : (
                     row.bookings.map((b) => (
                       <div key={b.id}>
-                        {slotLabel(b)} <span className="badge badge-blue">{b.status}</span>
+                        {slotLabel(b)} <span className={`badge ${getStatusBadgeClass(b.status)}`}>{formatStatus(b.status)}</span>
                       </div>
                     ))
                   )}

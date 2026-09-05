@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, type ProgressEvent, type RepairOrder } from '../../lib/api'
-import { formatDate } from '../../lib/format'
+import { formatDate, formatStatus, getStatusBadgeClass } from '../../lib/format'
 import { useToast } from '../../context/ToastContext'
 
 const STATUS_PROGRESS: Record<string, number> = {
@@ -86,7 +86,7 @@ export function RepairStatus() {
             <select value={order?.id ?? ''} onChange={(e) => setSelectedOrderId(Number(e.target.value))}>
               {orders.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.orderNumber} · {o.licensePlate} ({o.status})
+                  {o.orderNumber} · {o.licensePlate} ({formatStatus(o.status)})
                 </option>
               ))}
             </select>
@@ -97,8 +97,8 @@ export function RepairStatus() {
       <div className="card" style={{ marginBottom: '1.25rem' }}>
         <div className="row-between">
           <div>
-            <div className="badge badge-amber" style={{ marginBottom: '0.5rem' }}>
-              {order?.status ?? 'Chưa có RO'}
+            <div className={`badge ${getStatusBadgeClass(order?.status)}`} style={{ marginBottom: '0.5rem' }}>
+              {order?.status ? formatStatus(order.status) : 'Chưa có RO'}
             </div>
             <div style={{ fontWeight: 700 }}>
               {order?.orderNumber ?? '-'} · {order?.licensePlate ?? '-'}

@@ -13,14 +13,46 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.garage.oto.domain.Quote;
+import com.garage.oto.domain.QuoteLine;
+import com.garage.oto.domain.QuoteStatus;
+import com.garage.oto.repository.QuoteRepository;
 
 @Service
 public class RevenueService {
 
   private final PaymentRepository paymentRepository;
+  private final QuoteRepository quoteRepository;
 
-  public RevenueService(PaymentRepository paymentRepository) {
+  public RevenueService(PaymentRepository paymentRepository, QuoteRepository quoteRepository) {
     this.paymentRepository = paymentRepository;
+    this.quoteRepository = quoteRepository;
+  }
+
+  @Transactional(readOnly = true)
+  public List<Map<String, Object>> revenueBreakdown() {
+    List<Quote> approvedQuotes = quoteRepository.findAll().stream()
+        .filter(q -> q.getStatus() == QuoteStatus.APPROVED)
+        .toList();
+    Map<String, BigDecimal> map = new LinkedHashMap<>();
+    for (Quote q : approvedQuotes) {
+      for (QuoteLine line : q.getLines()) {
+        map.merge(line.getDescription(), line.getLineTotal(), BigDecimal::add);
+      }
+    }
+    List<Map<String, Object>> list = new ArrayList<>();
+    map.entrySet().stream()
+        .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+        .limit(6)
+        .forEach(e -> {
+          Map<String, Object> item = new LinkedHashMap<>();
+          item.put("name", e.getKey());
+          item.put("value", e.getValue());
+          list.add(item);
+        });
+    return list;
   }
 
   public RevenueReportResponse report(Instant from, Instant to) {

@@ -26,4 +26,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
           + "WHERE b.status = :status "
           + "ORDER BY b.createdAt DESC")
   List<Booking> findAllByStatusOrderByCreatedAtDesc(@Param("status") BookingStatus status);
+
+  @Query(
+      "SELECT COUNT(b) > 0 FROM Booking b "
+          + "WHERE b.vehicle.id = :vehicleId "
+          + "AND b.requestedDate = :requestedDate "
+          + "AND (b.status = com.garage.oto.domain.BookingStatus.PENDING "
+          + "OR (b.status = com.garage.oto.domain.BookingStatus.CONFIRMED "
+          + "AND NOT EXISTS ("
+          + "SELECT ro FROM RepairOrder ro WHERE ro.booking = b AND ro.status IN ("
+          + "com.garage.oto.domain.RepairOrderStatus.DELIVERED, com.garage.oto.domain.RepairOrderStatus.CANCELLED))))")
+  boolean existsActiveBookingForVehicleOnDate(
+      @Param("vehicleId") Long vehicleId,
+      @Param("requestedDate") java.time.LocalDate requestedDate);
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, type RepairOrder } from '../../lib/api'
+import { formatStatus } from '../../lib/format'
 
 const CHECKLIST_ITEMS = [
   'Rửa xe hoàn tất',
@@ -61,7 +62,7 @@ export function VehicleHandover() {
     try {
       const updated = await api.staff.handover(selectedOrder.id)
       setOrders((current) => current.map((o) => (o.id === updated.id ? updated : o)))
-      setMessage(`Đã bàn giao xe ${updated.licensePlate} (${updated.orderNumber}). Trạng thái: ${updated.status}.`)
+      setMessage(`Đã bàn giao xe ${updated.licensePlate} (${updated.orderNumber}). Trạng thái: ${formatStatus(updated.status)}.`)
       setChecked({})
       setHandoverNote('')
     } catch (err) {
@@ -74,7 +75,7 @@ export function VehicleHandover() {
   return (
     <div className="page">
       <h1 className="page-title">Hoàn thành & bàn giao xe</h1>
-      <p className="page-desc">Chỉ RO đã hoàn thành sửa chữa (COMPLETED) mới có thể bàn giao cho khách.</p>
+      <p className="page-desc">Chỉ lệnh sửa chữa đã hoàn thành mới có thể bàn giao cho khách.</p>
 
       {loading ? <p className="muted">Đang tải...</p> : null}
 
@@ -82,7 +83,7 @@ export function VehicleHandover() {
         <div className="card">
           <h2 style={{ fontSize: '1rem', margin: '0 0 1rem' }}>Chọn RO sẵn sàng bàn giao</h2>
           {readyOrders.length === 0 ? (
-            <p className="muted">Chưa có RO nào ở trạng thái COMPLETED. Hoàn thành sửa chữa trước khi bàn giao.</p>
+            <p className="muted">Chưa có RO nào ở trạng thái hoàn thành. Vui lòng cập nhật tiến độ trước khi bàn giao.</p>
           ) : (
             <div className="stack" style={{ marginBottom: '1rem' }}>
               {readyOrders.map((order) => (

@@ -43,5 +43,10 @@ public class AdminRevenueController {
     LocalDate f = from != null ? from : t.minusDays(6);
     return revenueService.dailyRevenue(f, t);
   }
+
+  @GetMapping("/breakdown")
+  public java.util.List<java.util.Map<String, Object>> breakdown() {
+    return revenueService.revenueBreakdown();
+  }
 }
 

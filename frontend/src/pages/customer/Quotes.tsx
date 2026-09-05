@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, type Quote } from '../../lib/api'
-import { formatMoney } from '../../lib/format'
+import { formatMoney, formatStatus, getStatusBadgeClass } from '../../lib/format'
 
 export function Quotes() {
   const [quotes, setQuotes] = useState<Quote[]>([])
@@ -57,7 +57,7 @@ export function Quotes() {
               Lệnh sửa chữa (RO): #{selected?.repairOrderId ?? '-'}
             </p>
             <p style={{ margin: '2px 0', fontSize: '10pt' }}>
-              Trạng thái: <strong>{selected?.status ?? '-'}</strong>
+              Trạng thái: <strong>{selected?.status ? formatStatus(selected.status) : '-'}</strong>
             </p>
           </div>
         </div>
@@ -69,7 +69,9 @@ export function Quotes() {
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div className="row-between">
           <div>
-            <span className="badge badge-blue" style={{ marginBottom: '0.5rem' }}>{selected?.status ?? '—'}</span>
+            <span className={`badge ${getStatusBadgeClass(selected?.status)}`} style={{ marginBottom: '0.5rem' }}>
+              {selected?.status ? formatStatus(selected.status) : '—'}
+            </span>
             <div style={{ fontWeight: 700 }}>{selected?.quoteNumber ?? 'Chưa có báo giá'}</div>
             <div className="muted">RO #{selected?.repairOrderId ?? '-'}</div>
             {selected?.staffNotes ? (
@@ -150,7 +152,7 @@ export function Quotes() {
           <select value={selectedId ?? ''} onChange={(e) => setSelectedId(Number(e.target.value))}>
             {quotes.map((q) => (
               <option key={q.id} value={q.id}>
-                {q.quoteNumber} · RO #{q.repairOrderId} ({q.status})
+                {q.quoteNumber} · RO #{q.repairOrderId} ({formatStatus(q.status)})
               </option>
             ))}
           </select>

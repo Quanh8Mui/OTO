@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/staff/repair-orders")
-@PreAuthorize("hasRole('STAFF')")
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 @RequiredArgsConstructor
 public class StaffRepairController {
 

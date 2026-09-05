@@ -199,7 +199,7 @@ public class DataInitializer implements ApplicationRunner {
   }
 
   private Vehicle ensureVehicle(User customer, String plate, String brand, String model, int year, String vin, String color) {
-    return vehicleRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId()).stream()
+    return vehicleRepository.findAll().stream()
         .filter(v -> plate.equalsIgnoreCase(v.getLicensePlate()))
         .findFirst()
         .orElseGet(() -> {
@@ -301,7 +301,7 @@ public class DataInitializer implements ApplicationRunner {
   }
 
   private Payment ensurePayment(String number, RepairOrder order, Quote quote, BigDecimal amount, PaymentMethod method, PaymentStatus status, String ref) {
-    return paymentRepository.findByRepairOrderIdOrderByCreatedAtDesc(order.getId()).stream()
+    return paymentRepository.findAll().stream()
         .filter(p -> number.equals(p.getPaymentNumber()))
         .findFirst()
         .orElseGet(() -> {

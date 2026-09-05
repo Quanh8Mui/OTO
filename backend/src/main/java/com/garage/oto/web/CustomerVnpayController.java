@@ -43,4 +43,16 @@ public class CustomerVnpayController {
         returnUrl);
     return new VnpayCreateResponse(url, payment.getPaymentNumber());
   }
+
+  @PostMapping("/mock-complete")
+  public com.garage.oto.dto.payment.PaymentResponse mockComplete(
+      @AuthenticationPrincipal User user,
+      @RequestBody java.util.Map<String, String> payload) {
+    String paymentRef = payload.get("paymentRef");
+    if (paymentRef == null || paymentRef.isBlank()) {
+      throw new org.springframework.web.server.ResponseStatusException(
+          org.springframework.http.HttpStatus.BAD_REQUEST, "paymentRef is required");
+    }
+    return paymentService.mockCompleteByCustomer(user, paymentRef);
+  }
 }

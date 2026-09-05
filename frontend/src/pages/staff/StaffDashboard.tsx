@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { RealtimeCalendar } from '../../components/RealtimeCalendar'
 import { api, type RepairOrder } from '../../lib/api'
+import { formatStatus, getStatusBadgeClass } from '../../lib/format'
 import { useToast } from '../../context/ToastContext'
 
 export function StaffDashboard() {
@@ -75,7 +76,7 @@ export function StaffDashboard() {
                 <td>{r.orderNumber}</td>
                 <td>{r.assignedStaffName ?? '-'}</td>
                 <td>
-                  <span className="badge badge-blue">{r.status}</span>
+                  <span className={`badge ${getStatusBadgeClass(r.status)}`}>{formatStatus(r.status)}</span>
                 </td>
               </tr>
             ))}

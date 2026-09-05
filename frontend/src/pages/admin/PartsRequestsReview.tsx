@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../lib/api'
+import { formatStatus, getStatusBadgeClass } from '../../lib/format'
 
 type PartsRequest = {
   id: number
@@ -11,19 +12,6 @@ type PartsRequest = {
   createdAt: string
   fulfilledAt?: string
   lines: Array<{ id: number; partId: number; partName: string; partSku: string; quantityRequested: number; quantityIssued: number }>
-}
-
-function statusBadge(status: PartsRequest['status']) {
-  switch (status) {
-    case 'APPROVED':
-      return 'badge-blue'
-    case 'FULFILLED':
-      return 'badge-green'
-    case 'REJECTED':
-      return 'badge-red'
-    default:
-      return 'badge-amber'
-  }
 }
 
 export function PartsRequestsReview() {
@@ -100,7 +88,7 @@ export function PartsRequestsReview() {
                 }}
               >
                 <strong>{req.requestNumber}</strong>
-                <div className="muted" style={{ marginTop: '0.35rem' }}>RO #{req.repairOrderId}</div>
+                <div className="muted" style={{ marginTop: '0.35rem' }}>RO #{req.repairOrderId} · {formatStatus(req.status)}</div>
                 <div className="muted" style={{ marginTop: '0.2rem' }}>{req.lines.length} dòng phụ tùng</div>
               </button>
             ))}
@@ -114,7 +102,7 @@ export function PartsRequestsReview() {
               <div className="card">
                 <div className="row-between" style={{ marginBottom: '1rem' }}>
                   <div>
-                    <span className={`badge ${statusBadge(selected.status)}`}>{selected.status}</span>
+                    <span className={`badge ${getStatusBadgeClass(selected.status)}`}>{formatStatus(selected.status)}</span>
                     <h2 style={{ margin: '0.5rem 0 0', fontSize: '1.15rem' }}>{selected.requestNumber}</h2>
                     <div className="muted" style={{ marginTop: '0.25rem' }}>RO #{selected.repairOrderId} · Staff #{selected.requestedByStaffId}</div>
                   </div>

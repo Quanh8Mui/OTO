@@ -60,6 +60,17 @@ export type RepairOrder = {
   updatedAt?: string
 }
 
+export type ServiceRating = {
+  id: number
+  repairOrderId: number
+  orderNumber?: string
+  licensePlate?: string
+  customerName?: string
+  rating: number
+  comment?: string
+  createdAt: string
+}
+
 export type RepairOrderResponse = RepairOrder
 
 export type ProgressEvent = {
@@ -89,12 +100,14 @@ export type Quote = {
   grandTotal: number
   rejectedReason?: string
   lines: QuoteLine[]
+  createdAt?: string
 }
 
 export type Payment = {
   id: number
   paymentNumber: string
   repairOrderId: number
+  quoteId?: number | null
   amount: number
   method: 'CASH' | 'CARD' | 'BANK_TRANSFER' | 'ONLINE'
   status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
@@ -257,8 +270,14 @@ export const api = {
       }),
     createVnpayPayment: (payload: { repairOrderId: number; quoteId?: number; amount: number; orderInfo?: string }) =>
       request<{ paymentUrl: string; paymentRef: string }>('/api/customer/vnpay/create', { method: 'POST', body: JSON.stringify(payload) }),
+    mockCompleteVnpayPayment: (paymentRef: string) =>
+      request<Payment>('/api/customer/vnpay/mock-complete', {
+        method: 'POST',
+        body: JSON.stringify({ paymentRef }),
+      }),
     createRating: (payload: { repairOrderId: number; rating: number; comment?: string }) =>
       request('/api/customer/ratings', { method: 'POST', body: JSON.stringify(payload) }),
+    ratings: () => request<ServiceRating[]>('/api/customer/ratings'),
     createBooking: (payload: {
       vehicleId?: number | null
       licensePlate: string
@@ -274,7 +293,7 @@ export const api = {
     }) => request<Booking>('/api/customer/bookings', { method: 'POST', body: JSON.stringify(payload) }),
   },
   staff: {
-    bookings: () => request<Booking[]>('/api/staff/bookings'),
+    bookings: (scope?: string) => request<Booking[]>(`/api/staff/bookings${scope ? `?scope=${scope}` : ''}`),
     schedules: () => request<StaffSchedule[]>('/api/staff/schedules'),
     createSchedule: (payload: { dayOfWeek: number; startTime: string; endTime: string }) =>
       request<StaffSchedule>('/api/staff/schedules', { method: 'POST', body: JSON.stringify(payload) }),
@@ -363,6 +382,7 @@ export const api = {
       if (to) q.set('to', to)
       return request<DailyRevenueItem[]>(`/api/admin/revenue/daily${q.size ? `?${q.toString()}` : ''}`)
     },
+    breakdown: () => request<Array<{ name: string; value: number }>>('/api/admin/revenue/breakdown'),
     notifications: () => request<NotificationSetting[]>('/api/admin/notification-settings'),
     updateNotification: (id: number, payload: { enabled: boolean; channel?: string; templateSubject?: string; templateBody?: string }) =>
       request<NotificationSetting>(`/api/admin/notification-settings/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
@@ -370,6 +390,7 @@ export const api = {
     approvePartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/approve`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
     fulfillPartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/fulfill`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
     rejectPartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/reject`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
+    ratings: () => request<ServiceRating[]>('/api/admin/ratings'),
   },
 }
 

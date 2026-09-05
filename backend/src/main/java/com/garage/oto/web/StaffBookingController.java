@@ -12,16 +12,21 @@ import com.garage.oto.service.BookingService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.web.bind.annotation.RequestParam;
+
 @RestController
 @RequestMapping("/api/staff/bookings")
-@PreAuthorize("hasRole('STAFF')")
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 @RequiredArgsConstructor
 public class StaffBookingController {
 
   private final BookingService bookingService;
 
   @GetMapping
-  public List<BookingResponse> listPending() {
-    return bookingService.listPending();
+  public List<BookingResponse> list(@RequestParam(defaultValue = "all") String scope) {
+    if ("pending".equalsIgnoreCase(scope)) {
+      return bookingService.listPending();
+    }
+    return bookingService.listAll();
   }
 }

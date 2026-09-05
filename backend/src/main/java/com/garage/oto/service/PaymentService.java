@@ -56,6 +56,21 @@ public class PaymentService {
       if (!q.getRepairOrder().getId().equals(ro.getId())) {
         throw new ApiException(HttpStatus.BAD_REQUEST, "Quote does not match repair order");
       }
+      final Long qId = q.getId();
+      boolean alreadyPaid = paymentRepository.findAll().stream()
+          .anyMatch(item -> item.getStatus() == PaymentStatus.COMPLETED &&
+              item.getQuote() != null && item.getQuote().getId().equals(qId));
+      if (alreadyPaid) {
+        throw new ApiException(HttpStatus.CONFLICT, "Hóa đơn này đã được thanh toán hoàn tất trước đó");
+      }
+    } else {
+      final Long roId = ro.getId();
+      boolean alreadyPaid = paymentRepository.findAll().stream()
+          .anyMatch(item -> item.getStatus() == PaymentStatus.COMPLETED &&
+              item.getRepairOrder().getId().equals(roId));
+      if (alreadyPaid) {
+        throw new ApiException(HttpStatus.CONFLICT, "Lệnh sửa chữa này đã được thanh toán hoàn tất trước đó");
+      }
     }
     Payment p = new Payment();
     p.setPaymentNumber(documentNumberService.nextPaymentNumber());
@@ -81,6 +96,21 @@ public class PaymentService {
       if (!q.getRepairOrder().getId().equals(ro.getId())) {
         throw new ApiException(HttpStatus.BAD_REQUEST, "Quote does not match repair order");
       }
+      final Long qId = q.getId();
+      boolean alreadyPaid = paymentRepository.findAll().stream()
+          .anyMatch(item -> item.getStatus() == PaymentStatus.COMPLETED &&
+              item.getQuote() != null && item.getQuote().getId().equals(qId));
+      if (alreadyPaid) {
+        throw new ApiException(HttpStatus.CONFLICT, "Hóa đơn này đã được thanh toán hoàn tất trước đó");
+      }
+    } else {
+      final Long roId = ro.getId();
+      boolean alreadyPaid = paymentRepository.findAll().stream()
+          .anyMatch(item -> item.getStatus() == PaymentStatus.COMPLETED &&
+              item.getRepairOrder().getId().equals(roId));
+      if (alreadyPaid) {
+        throw new ApiException(HttpStatus.CONFLICT, "Lệnh sửa chữa này đã được thanh toán hoàn tất trước đó");
+      }
     }
     Payment p = new Payment();
     p.setPaymentNumber(documentNumberService.nextPaymentNumber());
@@ -102,8 +132,46 @@ public class PaymentService {
     if (p.getStatus() != PaymentStatus.PENDING) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Payment already finalized");
     }
+    if (p.getQuote() != null) {
+      final Long qId = p.getQuote().getId();
+      boolean alreadyPaid = paymentRepository.findAll().stream()
+          .anyMatch(item -> !item.getId().equals(p.getId()) && item.getStatus() == PaymentStatus.COMPLETED &&
+              item.getQuote() != null && item.getQuote().getId().equals(qId));
+      if (alreadyPaid) {
+        p.setStatus(PaymentStatus.FAILED);
+        throw new ApiException(HttpStatus.CONFLICT, "Hóa đơn này đã được thanh toán hoàn tất trước đó");
+      }
+    }
     p.setStatus(PaymentStatus.COMPLETED);
     p.setTransactionRef(transactionRef);
+    p.setPaidAt(Instant.now());
+    return toResponse(p);
+  }
+
+  @Transactional
+  public PaymentResponse mockCompleteByCustomer(User customer, String paymentNumber) {
+    Payment p = paymentRepository.findAll().stream()
+        .filter(item -> paymentNumber.equals(item.getPaymentNumber()))
+        .findFirst()
+        .orElseThrow(this::notFoundPay);
+    if (!p.getRepairOrder().getCustomer().getId().equals(customer.getId())) {
+      throw new ApiException(HttpStatus.FORBIDDEN, "Forbidden");
+    }
+    if (p.getStatus() != PaymentStatus.PENDING) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Payment already finalized");
+    }
+    if (p.getQuote() != null) {
+      final Long qId = p.getQuote().getId();
+      boolean alreadyPaid = paymentRepository.findAll().stream()
+          .anyMatch(item -> !item.getId().equals(p.getId()) && item.getStatus() == PaymentStatus.COMPLETED &&
+              item.getQuote() != null && item.getQuote().getId().equals(qId));
+      if (alreadyPaid) {
+        p.setStatus(PaymentStatus.FAILED);
+        throw new ApiException(HttpStatus.CONFLICT, "Hóa đơn này đã được thanh toán hoàn tất trước đó");
+      }
+    }
+    p.setStatus(PaymentStatus.COMPLETED);
+    p.setTransactionRef("MOCK-VNPAY-" + System.currentTimeMillis());
     p.setPaidAt(Instant.now());
     return toResponse(p);
   }
@@ -116,6 +184,16 @@ public class PaymentService {
     }
     if (p.getStatus() != PaymentStatus.PENDING) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Payment already finalized");
+    }
+    if (p.getQuote() != null) {
+      final Long qId = p.getQuote().getId();
+      boolean alreadyPaid = paymentRepository.findAll().stream()
+          .anyMatch(item -> !item.getId().equals(p.getId()) && item.getStatus() == PaymentStatus.COMPLETED &&
+              item.getQuote() != null && item.getQuote().getId().equals(qId));
+      if (alreadyPaid) {
+        p.setStatus(PaymentStatus.FAILED);
+        throw new ApiException(HttpStatus.CONFLICT, "Hóa đơn này đã được thanh toán hoàn tất trước đó");
+      }
     }
     p.setStatus(PaymentStatus.COMPLETED);
     p.setTransactionRef(req.transactionRef());

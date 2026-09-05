@@ -27,8 +27,10 @@ public class VnpayService {
   }
 
   public String createPaymentUrl(String paymentRef, String orderInfo, long amountVnd, String returnUrl) {
-    String tmnCode = "VNPAYDEMO";
-    String hashSecret = appProperties.getJwt().getSecret();
+    String tmnCode = appProperties.getVnpay().getTmnCode();
+    String hashSecret = (appProperties.getVnpay().getHashSecret() != null && !appProperties.getVnpay().getHashSecret().isBlank())
+        ? appProperties.getVnpay().getHashSecret()
+        : appProperties.getJwt().getSecret();
     String version = "2.1.0";
     String command = "pay";
     String orderType = "other";
@@ -54,7 +56,10 @@ public class VnpayService {
 
     String query = buildQuery(params, true);
     String secureHash = hmacSHA512(hashSecret, query);
-    return UriComponentsBuilder.fromHttpUrl("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")
+    String payUrl = (appProperties.getVnpay().getPayUrl() != null && !appProperties.getVnpay().getPayUrl().isBlank())
+        ? appProperties.getVnpay().getPayUrl()
+        : "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+    return UriComponentsBuilder.fromHttpUrl(payUrl)
         .query(query)
         .queryParam("vnp_SecureHash", secureHash)
         .build(true)
@@ -65,7 +70,10 @@ public class VnpayService {
     String receivedHash = allParams.remove("vnp_SecureHash");
     allParams.remove("vnp_SecureHashType");
     String query = buildQuery(allParams, true);
-    String expected = hmacSHA512(appProperties.getJwt().getSecret(), query);
+    String hashSecret = (appProperties.getVnpay().getHashSecret() != null && !appProperties.getVnpay().getHashSecret().isBlank())
+        ? appProperties.getVnpay().getHashSecret()
+        : appProperties.getJwt().getSecret();
+    String expected = hmacSHA512(hashSecret, query);
     return expected.equalsIgnoreCase(receivedHash);
   }
 

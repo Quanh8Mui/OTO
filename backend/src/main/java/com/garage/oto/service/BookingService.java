@@ -34,6 +34,7 @@ public class BookingService {
     this.documentNumberService = documentNumberService;
   }
 
+  @Transactional(readOnly = true)
   public List<BookingResponse> list(User customer) {
     return bookingRepository.findByCustomerIdOrderByRequestedDateDescCreatedAtDesc(customer.getId())
         .stream()
@@ -41,8 +42,17 @@ public class BookingService {
         .toList();
   }
 
+  @Transactional(readOnly = true)
   public List<BookingResponse> listPending() {
     return bookingRepository.findAllByStatusOrderByCreatedAtDesc(BookingStatus.PENDING).stream()
+        .map(BookingService::toResponse)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<BookingResponse> listAll() {
+    return bookingRepository.findAll().stream()
+        .sorted((a, b) -> b.getRequestedDate().compareTo(a.getRequestedDate()))
         .map(BookingService::toResponse)
         .toList();
   }
@@ -50,6 +60,20 @@ public class BookingService {
   @Transactional
   public BookingResponse create(User customer, BookingRequest req) {
     Vehicle v = resolveVehicle(customer, req);
+
+    // Prevent duplicate bookings for same vehicle on same date
+    boolean hasActiveBooking =
+        bookingRepository.existsActiveBookingForVehicleOnDate(v.getId(), req.requestedDate());
+    if (hasActiveBooking) {
+      throw new ApiException(
+          HttpStatus.CONFLICT,
+          "Xe "
+              + v.getLicensePlate()
+              + " đã có lịch hẹn hoặc đang được xử lý vào ngày "
+              + req.requestedDate()
+              + ". Vui lòng không đặt lịch trùng lặp.");
+    }
+
     ServiceCatalogItem catalog = null;
     if (req.serviceCatalogId() != null) {
       catalog =

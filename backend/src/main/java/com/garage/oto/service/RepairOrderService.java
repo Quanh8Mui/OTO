@@ -139,6 +139,11 @@ public class RepairOrderService {
     if (req.progressNotes() != null) {
       ro.setProgressNotes(req.progressNotes());
     }
+    if (req.status() == RepairOrderStatus.DELIVERED && ro.getBooking() != null) {
+      ro.getBooking().setStatus(BookingStatus.COMPLETED);
+    } else if (req.status() == RepairOrderStatus.CANCELLED && ro.getBooking() != null) {
+      ro.getBooking().setStatus(BookingStatus.CANCELLED);
+    }
     addProgress(staff, ro, "Cập nhật trạng thái: " + req.status(), req.status().name());
     return toResponse(ro);
   }
@@ -207,6 +212,9 @@ public class RepairOrderService {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Order must be completed before handover");
     }
     ro.setStatus(RepairOrderStatus.DELIVERED);
+    if (ro.getBooking() != null) {
+      ro.getBooking().setStatus(BookingStatus.COMPLETED);
+    }
     addProgress(staff, ro, "Bàn giao xe cho khách", "DELIVERED");
     return toResponse(ro);
   }

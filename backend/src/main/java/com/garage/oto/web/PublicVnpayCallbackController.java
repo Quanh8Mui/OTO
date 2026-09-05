@@ -2,15 +2,15 @@ package com.garage.oto.web;
 
 import com.garage.oto.service.PaymentService;
 import com.garage.oto.service.VnpayService;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Public endpoint for VNPay return callback.
@@ -26,16 +26,19 @@ public class PublicVnpayCallbackController {
   private final VnpayService vnpayService;
 
   @GetMapping("/return")
-  public Map<String, Object> callback(@RequestParam Map<String, String> params) {
+  public void callback(@RequestParam Map<String, String> params, HttpServletResponse response) throws IOException {
+    String frontendUrl = "http://localhost:5173/app/customer/payment";
     if (!vnpayService.verify(new HashMap<>(params))) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid VNPay signature");
+      response.sendRedirect(frontendUrl + "?vnpayError=invalid_signature");
+      return;
     }
     String responseCode = params.get("vnp_ResponseCode");
     String txnRef = params.get("vnp_TxnRef");
     if ("00".equals(responseCode)) {
       paymentService.completeByPaymentNumber(txnRef, params.get("vnp_TransactionNo"));
-      return Map.of("success", true, "message", "Thanh toán thành công", "txnRef", txnRef);
+      response.sendRedirect(frontendUrl + "?vnpaySuccess=true&txnRef=" + txnRef);
+      return;
     }
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "VNPay payment failed: code " + responseCode);
+    response.sendRedirect(frontendUrl + "?vnpayError=" + responseCode);
   }
 }

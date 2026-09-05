@@ -38,8 +38,11 @@ services:
       DB_USER: oto_user
       DB_PASSWORD: oto_password
       SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: dev
       JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       CORS_ORIGINS: http://localhost,http://localhost:80,http://localhost:5173
+      VNPAY_TMN_CODE: KZDCH6GA
+      VNPAY_HASH_SECRET: KZLCWYLAREGFVFWNQOSPGKKVXSYYLGVJ
     ports:
       - "8080:8080"
     networks:

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class ServiceRatingService {
 
   private final ServiceRatingRepository serviceRatingRepository;
@@ -36,7 +37,7 @@ public class ServiceRatingService {
   @Transactional
   public ServiceRatingResponse create(User customer, ServiceRatingRequest req) {
     RepairOrder ro =
-        repairOrderRepository.findById(req.repairOrderId()).orElseThrow(() -> notFoundRo());
+        repairOrderRepository.findWithRelationsById(req.repairOrderId()).orElseThrow(() -> notFoundRo());
     if (!ro.getCustomer().getId().equals(customer.getId())) {
       throw new ApiException(HttpStatus.FORBIDDEN, "Forbidden");
     }
@@ -55,9 +56,26 @@ public class ServiceRatingService {
     return toResponse(r);
   }
 
+  public List<ServiceRatingResponse> listAll() {
+    return serviceRatingRepository.findAllByOrderByCreatedAtDesc().stream()
+        .map(ServiceRatingService::toResponse)
+        .toList();
+  }
+
   private static ServiceRatingResponse toResponse(ServiceRating r) {
+    String orderNumber = r.getRepairOrder() != null ? r.getRepairOrder().getOrderNumber() : null;
+    String licensePlate = (r.getRepairOrder() != null && r.getRepairOrder().getVehicle() != null)
+        ? r.getRepairOrder().getVehicle().getLicensePlate() : null;
+    String customerName = r.getCustomer() != null ? r.getCustomer().getFullName() : null;
     return new ServiceRatingResponse(
-        r.getId(), r.getRepairOrder().getId(), r.getRating(), r.getComment(), r.getCreatedAt());
+        r.getId(),
+        r.getRepairOrder() != null ? r.getRepairOrder().getId() : null,
+        orderNumber,
+        licensePlate,
+        customerName,
+        r.getRating(),
+        r.getComment(),
+        r.getCreatedAt());
   }
 
   private ApiException notFoundRo() {

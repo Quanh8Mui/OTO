@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, type ProgressEvent, type RepairOrderResponse } from '../../lib/api'
+import { formatStatus, getStatusBadgeClass } from '../../lib/format'
 
 const statusOptions = [
   'INTAKE',
@@ -11,40 +12,15 @@ const statusOptions = [
   'DELIVERED',
 ] as const
 
-function statusLabel(status?: string) {
-  switch (status) {
-    case 'INTAKE':
-      return 'Tiếp nhận'
-    case 'QUOTING':
-      return 'Lập báo giá'
-    case 'AWAITING_APPROVAL':
-      return 'Chờ duyệt'
-    case 'IN_PROGRESS':
-      return 'Đang sửa chữa'
-    case 'PAUSED':
-      return 'Tạm dừng'
-    case 'COMPLETED':
-      return 'Hoàn thành'
-    case 'DELIVERED':
-      return 'Đã bàn giao'
-    default:
-      return status ?? '-'
-  }
-}
-
-function statusBadge(status?: string) {
-  switch (status) {
-    case 'COMPLETED':
-    case 'DELIVERED':
-      return 'badge-green'
-    case 'PAUSED':
-      return 'badge-amber'
-    case 'AWAITING_APPROVAL':
-      return 'badge-blue'
-    default:
-      return 'badge-blue'
-  }
-}
+const STEPS = [
+  { key: 'INTAKE', label: '1. Tiếp nhận xe' },
+  { key: 'QUOTING', label: '2. Lập báo giá' },
+  { key: 'AWAITING_APPROVAL', label: '3. Chờ khách duyệt' },
+  { key: 'IN_PROGRESS', label: '4. Đang sửa chữa' },
+  { key: 'PAUSED', label: '5. Tạm dừng' },
+  { key: 'COMPLETED', label: '6. Hoàn thành sửa' },
+  { key: 'DELIVERED', label: '7. Đã bàn giao xe' },
+]
 
 function formatDate(value?: string) {
   if (!value) return '-'
@@ -61,6 +37,7 @@ export function RepairProgress() {
   const [status, setStatus] = useState<string>('IN_PROGRESS')
   const [progressNotes, setProgressNotes] = useState('')
   const [message, setMessage] = useState<string | null>(null)
+  const [isSuccess, setIsSuccess] = useState(false)
 
   async function loadOrders() {
     const data = await api.staff.repairOrders()
@@ -86,19 +63,19 @@ export function RepairProgress() {
 
   useEffect(() => {
     let active = true
-    ;(async () => {
-      try {
-        setLoading(true)
-        const data = await loadOrders()
-        if (active && data[0]) {
-          await loadOrder(data[0].id)
+      ; (async () => {
+        try {
+          setLoading(true)
+          const data = await loadOrders()
+          if (active && data[0]) {
+            await loadOrder(data[0].id)
+          }
+        } catch (err) {
+          if (active) setMessage(err instanceof Error ? err.message : 'Không thể tải dữ liệu')
+        } finally {
+          if (active) setLoading(false)
         }
-      } catch (err) {
-        if (active) setMessage(err instanceof Error ? err.message : 'Không thể tải dữ liệu')
-      } finally {
-        if (active) setLoading(false)
-      }
-    })()
+      })()
     return () => {
       active = false
     }
@@ -110,215 +87,417 @@ export function RepairProgress() {
     loadOrder(selectedId).finally(() => setLoading(false))
   }, [selectedId])
 
-  const currentStatusLabel = useMemo(() => statusLabel(order?.status), [order?.status])
-  const isClosed = order?.status === 'COMPLETED' || order?.status === 'DELIVERED'
-
   async function saveUpdate() {
     if (!selectedId) return
     setSaving(true)
     setMessage(null)
+    setIsSuccess(false)
     try {
       const updated = await api.staff.updateRepairStatus(selectedId, { status, progressNotes })
       await api.staff.addRepairProgress(selectedId, {
-        stepLabel: statusLabel(status),
-        message: progressNotes.trim() || `Cập nhật trạng thái: ${statusLabel(status)}`,
+        stepLabel: formatStatus(status),
+        message: progressNotes.trim() || `Cập nhật trạng thái: ${formatStatus(status)}`,
       })
       setOrder(updated)
       const events = await api.staff.repairProgress(selectedId)
       setHistory(events)
-      setMessage('Đã cập nhật tiến độ.')
+      setMessage(`Đã cập nhật tiến độ sang "${formatStatus(status)}" thành công!`)
+      setIsSuccess(true)
+      await loadOrders()
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Không thể cập nhật tiến độ')
+      setMessage(err instanceof Error ? err.message : 'Không thể cập nhật trạng thái')
+      setIsSuccess(false)
     } finally {
       setSaving(false)
     }
   }
 
-  async function completeWork() {
+  async function quickComplete() {
     if (!selectedId) return
     setSaving(true)
     setMessage(null)
+    setIsSuccess(false)
     try {
       const updated = await api.staff.completeWork(selectedId)
       setOrder(updated)
       setStatus(updated.status)
       const events = await api.staff.repairProgress(selectedId)
       setHistory(events)
-      setMessage('Đã chuyển sang trạng thái hoàn thành.')
+      setMessage('Đã đánh dấu hoàn thành tất cả hạng mục sửa chữa!')
+      setIsSuccess(true)
+      await loadOrders()
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Không thể hoàn thành công việc')
+      setMessage(err instanceof Error ? err.message : 'Không thể hoàn thành RO')
+      setIsSuccess(false)
     } finally {
       setSaving(false)
     }
   }
 
+  async function quickHandover() {
+    if (!selectedId) return
+    setSaving(true)
+    setMessage(null)
+    setIsSuccess(false)
+    try {
+      const updated = await api.staff.handover(selectedId)
+      setOrder(updated)
+      setStatus(updated.status)
+      const events = await api.staff.repairProgress(selectedId)
+      setHistory(events)
+      setMessage('Đã xác nhận bàn giao xe cho khách hàng thành công!')
+      setIsSuccess(true)
+      await loadOrders()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Không thể bàn giao xe')
+      setIsSuccess(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const currentStepIndex = useMemo(() => {
+    if (!order) return -1
+    return STEPS.findIndex((s) => s.key === order.status)
+  }, [order])
+
   return (
-    <div className="page">
-      <h1 className="page-title">Tiến độ sửa chữa</h1>
-      <p className="page-desc">Theo dõi RO như ngoài gara thật: xem trạng thái, cập nhật tiến độ và lịch sử thao tác.</p>
-
-      <div className="grid-2" style={{ alignItems: 'start' }}>
-        <div className="stack">
-          <div className="card">
-            <div className="row-between" style={{ marginBottom: '0.75rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1rem' }}>Danh sách RO</h2>
-              <span className="badge badge-blue">{orders.length} RO</span>
-            </div>
-            {loading && orders.length === 0 ? <p className="muted">Đang tải...</p> : null}
-            <div className="stack" style={{ maxHeight: 320, overflow: 'auto' }}>
-              {orders.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedId(item.id)}
-                  className="card"
-                  style={{
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    width: '100%',
-                    background: item.id === selectedId ? 'var(--accent-dim)' : 'var(--bg-panel)',
-                    border: item.id === selectedId ? '1px solid var(--accent)' : '1px solid var(--border)',
-                  }}
-                >
-                  <strong>{item.orderNumber}</strong>
-                  <div className="muted" style={{ marginTop: '0.35rem' }}>
-                    {item.licensePlate} · {item.customerName}
-                  </div>
-                  <div className="muted" style={{ marginTop: '0.2rem' }}>
-                    {item.vehicleLabel || 'Xe'}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        <div className="stack">
-          <div className="card">
-            {order ? (
-              <>
-                <div className="row-between" style={{ marginBottom: '1rem' }}>
-                  <div>
-                    <span className={`badge ${statusBadge(order.status)}`}>{statusLabel(order.status)}</span>
-                    <h2 style={{ margin: '0.5rem 0 0', fontSize: '1.15rem' }}>{order.orderNumber}</h2>
-                    <div className="muted" style={{ marginTop: '0.35rem' }}>
-                      {order.customerName} · {order.licensePlate} · {order.vehicleLabel || 'Xe'}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="muted">Thời gian tạo</div>
-                    <strong>{formatDate(order.createdAt)}</strong>
-                  </div>
-                </div>
-
-                <div className="grid-3" style={{ marginBottom: '1rem' }}>
-                  <div className="card card-muted">
-                    <div className="muted">RO</div>
-                    <strong>{order.orderNumber}</strong>
-                  </div>
-                  <div className="card card-muted">
-                    <div className="muted">Trạng thái</div>
-                    <strong>{currentStatusLabel}</strong>
-                  </div>
-                  <div className="card card-muted">
-                    <div className="muted">Phụ trách</div>
-                    <strong>{order.assignedStaffName || '-'}</strong>
-                  </div>
-                </div>
-
-                <div className="grid-2" style={{ marginBottom: '1rem' }}>
-                  <div className="card card-muted">
-                    <h3 style={{ marginTop: 0, fontSize: '0.98rem' }}>Thông tin RO</h3>
-                    <div className="stack">
-                      <div><span className="muted">Khách hàng:</span> {order.customerName}</div>
-                      <div><span className="muted">Biển số:</span> {order.licensePlate}</div>
-                      <div><span className="muted">Xe:</span> {order.vehicleLabel || '-'}</div>
-                      <div><span className="muted">Ghi chú tiếp nhận:</span> {order.intakeNotes || '-'}</div>
-                      <div><span className="muted">Ghi chú tiến độ:</span> {order.progressNotes || '-'}</div>
-                    </div>
-                  </div>
-
-                  <div className="card card-muted">
-                    <h3 style={{ marginTop: 0, fontSize: '0.98rem' }}>Tiến độ hiện tại</h3>
-                    <div className="row-between">
-                      <span className={`badge ${statusBadge(order.status)}`}>{currentStatusLabel}</span>
-                      <span className="muted">{isClosed ? 'Đã kết thúc' : 'Đang mở'}</span>
-                    </div>
-                    <div className="divider" />
-                    <div className="stack">
-                      {statusOptions.map((item) => (
-                        <div key={item} className="row-between">
-                          <span>{statusLabel(item)}</span>
-                          <span className={`badge ${order.status === item ? 'badge-green' : 'badge-blue'}`}>{order.status === item ? 'Hiện tại' : 'Bước'}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid-2">
-                  <div className="card card-muted">
-                    <h3 style={{ marginTop: 0, fontSize: '0.98rem' }}>Lịch sử cập nhật</h3>
-                    <div className="stack" style={{ maxHeight: 320, overflow: 'auto' }}>
-                      {history.length === 0 ? <p className="muted">Chưa có lịch sử.</p> : null}
-                      {history.map((item) => (
-                        <div key={item.id} className="card" style={{ padding: '0.85rem 1rem' }}>
-                          <div className="row-between">
-                            <strong>{item.stepLabel || 'Cập nhật'}</strong>
-                            <span className="muted" style={{ fontSize: '0.85rem' }}>{formatDate(item.createdAt)}</span>
-                          </div>
-                          <div style={{ marginTop: '0.35rem' }}>{item.message}</div>
-                          <div className="muted" style={{ marginTop: '0.25rem', fontSize: '0.85rem' }}>
-                            {item.createdByName || 'Hệ thống'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <h3 style={{ marginTop: 0, fontSize: '0.98rem' }}>Form update</h3>
-                    <div className="field">
-                      <label>Trạng thái mới</label>
-                      <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                        {statusOptions.map((item) => (
-                          <option key={item} value={item}>
-                            {statusLabel(item)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label>Ghi chú cập nhật</label>
-                      <textarea value={progressNotes} onChange={(e) => setProgressNotes(e.target.value)} placeholder="Ví dụ: Đang chờ phụ tùng má phanh..." />
-                    </div>
-                    <div className="row-between" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <button type="button" className="btn btn-ghost" onClick={() => void completeWork()} disabled={saving || isClosed}>
-                        Hoàn thành sửa chữa
-                      </button>
-                      <button type="button" className="btn btn-primary" onClick={() => void saveUpdate()} disabled={saving}>
-                        {saving ? 'Đang cập nhật...' : 'Lưu cập nhật'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {message ? (
-                  <div className="card card-muted" style={{ marginTop: '1rem' }}>
-                    <strong>Thông báo</strong>
-                    <p className="muted" style={{ marginBottom: 0 }}>
-                      {message}
-                    </p>
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <p className="muted">Chưa chọn RO.</p>
-            )}
-          </div>
+    <div className="page" style={{ maxWidth: '1600px' }}>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Theo dõi & Cập nhật tiến độ sửa chữa</h1>
+          <p className="page-desc">
+            Cập nhật từng bước thao tác thực tế tại xưởng, ghi nhật ký tiến độ và bàn giao xe cho khách.
+          </p>
         </div>
       </div>
+
+      {/* THANH CHỌN RO NGANG (HORIZONTAL SELECTOR BAR) */}
+      <div className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+          <label style={{ margin: 0, fontWeight: 700, fontSize: '0.98rem', whiteSpace: 'nowrap', color: '#533c6e' }}>
+            Chọn Lệnh sửa chữa (RO):
+          </label>
+
+          <div style={{ flex: 1, minWidth: '320px' }}>
+            <select
+              value={order?.id ?? ''}
+              onChange={(e) => setSelectedId(e.target.value ? Number(e.target.value) : null)}
+              style={{
+                width: '100%',
+                padding: '0.65rem 1rem',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                border: '1.5px solid #533c6e',
+                borderRadius: '12px',
+                background: '#faf8fd',
+              }}
+            >
+              {orders.length === 0 ? (
+                <option value="">{loading ? 'Đang tải dữ liệu...' : 'Chưa có lệnh RO nào'}</option>
+              ) : null}
+              {orders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.orderNumber} · Biển số: {o.licensePlate} · Khách: {o.customerName} · Xe:{' '}
+                  {o.vehicleLabel || 'Tiêu chuẩn'} - [{formatStatus(o.status)}]
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {order && (
+            <span className={`badge ${getStatusBadgeClass(order.status)}`} style={{ padding: '0.45rem 1rem' }}>
+              {formatStatus(order.status)}
+            </span>
+          )}
+
+          <span className="badge badge-blue">{orders.length} RO</span>
+        </div>
+      </div>
+
+      {/* CHI TIẾT TIẾN ĐỘ TRẢI RỘNG THEO CHIỀU NGANG */}
+      {order ? (
+        <div className="stack" style={{ gap: '1.5rem' }}>
+          {/* HÀNG 1: THÔNG TIN TỔNG QUAN XE (HORIZONTAL STRIP) */}
+          <div
+            className="card"
+            style={{
+              padding: '1.25rem 1.5rem',
+              background: 'linear-gradient(135deg, #ffffff 0%, #faf8fd 100%)',
+              border: '1px solid #e8e2f2',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1.25rem',
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <div className="muted" style={{ fontSize: '0.8rem' }}>Mã lệnh RO</div>
+                <strong style={{ fontSize: '1.35rem', color: '#533c6e' }}>{order.orderNumber}</strong>
+              </div>
+
+              <div>
+                <div className="muted" style={{ fontSize: '0.8rem' }}>Biển số xe</div>
+                <div
+                  style={{
+                    display: 'inline-block',
+                    fontWeight: 800,
+                    fontSize: '1.15rem',
+                    background: '#f2edf8',
+                    color: '#533c6e',
+                    padding: '0.2rem 0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid #ded4ec',
+                    marginTop: '0.15rem',
+                  }}
+                >
+                  {order.licensePlate}
+                </div>
+              </div>
+
+              <div>
+                <div className="muted" style={{ fontSize: '0.8rem' }}>Khách hàng</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>{order.customerName}</div>
+              </div>
+
+              <div>
+                <div className="muted" style={{ fontSize: '0.8rem' }}>Kỹ thuật viên phụ trách</div>
+                <div style={{ fontWeight: 600, color: '#533c6e' }}>
+                  {order.assignedStaffName || 'Đang phân công'}
+                </div>
+              </div>
+
+              <div>
+                <div className="muted" style={{ fontSize: '0.8rem' }}>Ngày đón tiếp</div>
+                <div style={{ fontSize: '0.92rem' }}>{formatDate(order.createdAt)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* HÀNG 2: TIẾN TRÌNH 7 BƯỚC NGANG (HORIZONTAL STEPPER) */}
+          <div className="card" style={{ padding: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.25rem', color: '#282033' }}>
+              Quy trình tiến độ xe tại garage (7 giai đoạn)
+            </h2>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '0.5rem',
+                alignItems: 'stretch',
+              }}
+            >
+              {STEPS.map((s, index) => {
+                const isCurrent = s.key === order.status
+                const isPassed = currentStepIndex > index
+                return (
+                  <div
+                    key={s.key}
+                    style={{
+                      padding: '0.85rem 0.65rem',
+                      borderRadius: '12px',
+                      background: isCurrent ? '#533c6e' : isPassed ? '#e8f5e9' : '#f8fafc',
+                      border: isCurrent ? '1.5px solid #533c6e' : '1px solid #e8e2f2',
+                      color: isCurrent ? '#ffffff' : isPassed ? '#2e7d32' : '#64748b',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                      boxShadow: isCurrent ? '0 4px 14px rgba(83, 60, 110, 0.25)' : 'none',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        background: isCurrent ? '#ffffff' : isPassed ? '#2e7d32' : '#cbd5e1',
+                        color: isCurrent ? '#533c6e' : '#ffffff',
+                      }}
+                    >
+                      {isPassed ? '✓' : index + 1}
+                    </div>
+
+                    <div style={{ fontSize: '0.82rem', fontWeight: isCurrent ? 700 : 600, lineHeight: '1.2' }}>
+                      {s.label.split('. ')[1]}
+                    </div>
+
+                    {isCurrent && (
+                      <span
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          background: 'rgba(255, 255, 255, 0.25)',
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        Đang ở bước này
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* HÀNG 3: CẬP NHẬT TRẠNG THÁI & LỊCH SỬ THAO TÁC (2 CỘT NGANG RỘNG RÃI) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+            {/* Cột Trái: Cập nhật trạng thái */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 1.25rem', color: '#282033' }}>
+                Cập nhật tiến độ & Thao tác
+              </h3>
+
+              <div className="field">
+                <label>Chọn trạng thái tiến độ mới</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  style={{ fontWeight: 600, fontSize: '0.95rem' }}
+                >
+                  {statusOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {formatStatus(opt)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label>Nhật ký chi tiết công việc thực hiện</label>
+                <textarea
+                  rows={4}
+                  value={progressNotes}
+                  onChange={(e) => setProgressNotes(e.target.value)}
+                  placeholder="Đang kiểm tra hệ thống phanh, tiến hành thay dầu động cơ và lọc gió..."
+                />
+              </div>
+
+              {message && (
+                <div
+                  style={{
+                    padding: '0.75rem 1rem',
+                    borderRadius: '10px',
+                    marginBottom: '1rem',
+                    backgroundColor: isSuccess ? '#e8f5e9' : '#ffebee',
+                    color: isSuccess ? '#2e7d32' : '#c62828',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {message}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => void saveUpdate()}
+                  disabled={saving}
+                  style={{ padding: '0.75rem', fontSize: '0.95rem' }}
+                >
+                  {saving ? 'Đang cập nhật...' : '✓ Lưu & Cập nhật tiến độ'}
+                </button>
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => void quickComplete()}
+                    disabled={saving || order.status === 'COMPLETED' || order.status === 'DELIVERED'}
+                    style={{ flex: 1, padding: '0.65rem' }}
+                  >
+                    Hoàn thành sửa
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => void quickHandover()}
+                    disabled={saving || order.status !== 'COMPLETED'}
+                    style={{ flex: 1, padding: '0.65rem', borderColor: '#16a34a', color: '#16a34a' }}
+                  >
+                    Giao xe cho khách
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #f0ebf7', fontSize: '0.88rem' }}>
+                <span className="muted">Ghi chú lúc tiếp nhận:</span>
+                <div style={{ whiteSpace: 'pre-line', marginTop: '0.25rem', color: '#4b5563', fontStyle: 'italic' }}>
+                  {order.intakeNotes || 'Không có ghi chú tiếp nhận'}
+                </div>
+              </div>
+            </div>
+
+            {/* Cột Phải: Lịch sử thao tác & Nhật ký */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 1.25rem', color: '#282033' }}>
+                Lịch sử thao tác & Nhật ký tiến độ
+              </h3>
+
+              <div
+                className="stack"
+                style={{
+                  maxHeight: '440px',
+                  overflowY: 'auto',
+                  paddingRight: '0.35rem',
+                  gap: '0.85rem',
+                }}
+              >
+                {history.map((event) => (
+                  <div
+                    key={event.id}
+                    style={{
+                      borderLeft: '3px solid #533c6e',
+                      paddingLeft: '1rem',
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    <div className="row-between">
+                      <strong style={{ color: '#533c6e' }}>{event.stepLabel || 'Cập nhật'}</strong>
+                      <span className="muted" style={{ fontSize: '0.8rem' }}>
+                        {formatDate(event.createdAt)}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: '0.25rem', color: '#334155' }}>{event.message}</div>
+                    {event.createdByName && (
+                      <div className="muted" style={{ fontSize: '0.78rem', marginTop: '0.2rem' }}>
+                        Thực hiện bởi: {event.createdByName}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {history.length === 0 && (
+                  <p className="muted" style={{ textAlign: 'center', padding: '2rem 0' }}>
+                    Chưa có lịch sử cập nhật nào cho lệnh RO này.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
+          <p className="muted" style={{ fontSize: '1.1rem' }}>
+            Chưa có Lệnh sửa chữa (RO) nào để theo dõi tiến độ.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

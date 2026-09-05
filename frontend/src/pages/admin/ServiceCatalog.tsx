@@ -169,7 +169,9 @@ export function ServiceCatalog() {
                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>{s.code}</td>
                 <td>{s.name}</td>
                 <td>{formatMoney(s.basePrice)}</td>
-                <td>{s.active ? 'Hoạt động' : 'Tạm dừng'}</td>
+                <td>
+                  <span className={`badge ${s.active ? 'badge-green' : 'badge-amber'}`}>{s.active ? 'Hoạt động' : 'Tạm dừng'}</span>
+                </td>
                 <td>
                   <button type="button" className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem' }} onClick={() => openEdit(s)}>
                     Sửa

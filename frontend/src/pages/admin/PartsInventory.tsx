@@ -4,9 +4,9 @@ import { api, type Part } from '../../lib/api'
 
 function getStockStatus(part: Part) {
   if (part.quantityOnHand <= 0) return { label: 'Hết hàng', badge: 'badge-red' }
-  if (part.quantityOnHand < part.minStock) return { label: 'Thấp', badge: 'badge-amber' }
+  if (part.quantityOnHand < part.minStock) return { label: 'Tồn thấp', badge: 'badge-amber' }
   if (part.quantityOnHand === part.minStock) return { label: 'Cảnh báo', badge: 'badge-blue' }
-  return { label: 'OK', badge: 'badge-green' }
+  return { label: 'Đủ hàng', badge: 'badge-green' }
 }
 
 type ActionMode = 'none' | 'adjust'
