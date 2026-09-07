@@ -20,6 +20,9 @@ public interface RepairOrderRepository extends JpaRepository<RepairOrder, Long> 
   List<RepairOrder> findAllByOrderByUpdatedAtDesc();
 
   @EntityGraph(attributePaths = {"booking", "customer", "vehicle", "assignedStaff"})
+  List<RepairOrder> findByBooking_IdIn(List<Long> bookingIds);
+
+  @EntityGraph(attributePaths = {"booking", "customer", "vehicle", "assignedStaff"})
   List<RepairOrder> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
   @EntityGraph(attributePaths = {"booking", "customer", "vehicle", "assignedStaff"})

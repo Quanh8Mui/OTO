@@ -31,6 +31,7 @@ public class RepairOrderService {
   private final VehicleRepository vehicleRepository;
   private final UserRepository userRepository;
   private final DocumentNumberService documentNumberService;
+  private final EmailService emailService;
 
   public RepairOrderService(
       RepairOrderRepository repairOrderRepository,
@@ -38,13 +39,15 @@ public class RepairOrderService {
       BookingRepository bookingRepository,
       VehicleRepository vehicleRepository,
       UserRepository userRepository,
-      DocumentNumberService documentNumberService) {
+      DocumentNumberService documentNumberService,
+      EmailService emailService) {
     this.repairOrderRepository = repairOrderRepository;
     this.progressEventRepository = progressEventRepository;
     this.bookingRepository = bookingRepository;
     this.vehicleRepository = vehicleRepository;
     this.userRepository = userRepository;
     this.documentNumberService = documentNumberService;
+    this.emailService = emailService;
   }
 
   @Transactional(readOnly = true)
@@ -162,6 +165,7 @@ public class RepairOrderService {
     e.setStepLabel(stepLabel);
     e.setCreatedBy(actor);
     progressEventRepository.save(e);
+    emailService.sendRepairProgressEmail(ro, e);
   }
 
   @Transactional(readOnly = true)

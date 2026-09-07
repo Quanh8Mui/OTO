@@ -28,6 +28,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
   List<Booking> findAllByStatusOrderByCreatedAtDesc(@Param("status") BookingStatus status);
 
   @Query(
+      "SELECT b FROM Booking b "
+          + "JOIN FETCH b.customer "
+          + "JOIN FETCH b.vehicle "
+          + "LEFT JOIN FETCH b.serviceCatalog "
+          + "ORDER BY b.requestedDate DESC, b.createdAt DESC")
+  List<Booking> findAllWithRelations();
+
+  @Query(
       "SELECT COUNT(b) > 0 FROM Booking b "
           + "WHERE b.vehicle.id = :vehicleId "
           + "AND b.requestedDate = :requestedDate "

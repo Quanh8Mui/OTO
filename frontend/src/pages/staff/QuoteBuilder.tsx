@@ -344,6 +344,22 @@ export function QuoteBuilder() {
                         ? 'KHÁCH TỪ CHỐI'
                         : 'BẢN NHÁP'}
                 </span>
+                {quote?.status === 'REJECTED' && quote.rejectedReason && (
+                  <div
+                    style={{
+                      marginTop: '0.45rem',
+                      padding: '0.4rem 0.6rem',
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      border: '1px solid #fca5a5',
+                      borderRadius: '8px',
+                      color: '#b91c1c',
+                      fontSize: '0.82rem',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <strong>Phản hồi của khách:</strong> {quote.rejectedReason}
+                  </div>
+                )}
               </div>
             </div>
           </div>

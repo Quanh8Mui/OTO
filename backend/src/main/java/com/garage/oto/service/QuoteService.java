@@ -36,18 +36,21 @@ public class QuoteService {
   private final ServiceCatalogRepository serviceCatalogRepository;
   private final PartRepository partRepository;
   private final DocumentNumberService documentNumberService;
+  private final EmailService emailService;
 
   public QuoteService(
       QuoteRepository quoteRepository,
       RepairOrderRepository repairOrderRepository,
       ServiceCatalogRepository serviceCatalogRepository,
       PartRepository partRepository,
-      DocumentNumberService documentNumberService) {
+      DocumentNumberService documentNumberService,
+      EmailService emailService) {
     this.quoteRepository = quoteRepository;
     this.repairOrderRepository = repairOrderRepository;
     this.serviceCatalogRepository = serviceCatalogRepository;
     this.partRepository = partRepository;
     this.documentNumberService = documentNumberService;
+    this.emailService = emailService;
   }
 
   @Transactional(readOnly = true)
@@ -170,6 +173,7 @@ public class QuoteService {
     q.setSentAt(Instant.now());
     RepairOrder ro = q.getRepairOrder();
     ro.setStatus(RepairOrderStatus.AWAITING_APPROVAL);
+    emailService.sendQuoteReadyEmail(q);
     return toResponse(q);
   }
 

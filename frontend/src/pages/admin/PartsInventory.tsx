@@ -101,14 +101,14 @@ export function PartsInventory() {
       <p className="page-desc">SKU, tồn kho, định mức tối thiểu, vị trí.</p>
 
       <div className="grid-3" style={{ marginBottom: '1rem' }}>
-        <div className="card"><div className="stat"><span className="stat-label">Tổng SKU</span><span className="stat-value">{stats.totalParts}</span><span className="muted">Đang theo dõi trong kho</span></div></div>
+        <div className="card"><div className="stat"><span className="stat-label">Tổng</span><span className="stat-value">{stats.totalParts}</span><span className="muted">Đang theo dõi trong kho</span></div></div>
         <div className="card"><div className="stat"><span className="stat-label">Cần bổ sung</span><span className="stat-value">{stats.lowStockPartsCount + stats.warningPartsCount}</span><span className="muted">Dưới hoặc sát định mức</span></div></div>
         <div className="card"><div className="stat"><span className="stat-label">Hết hàng</span><span className="stat-value">{stats.outOfStockPartsCount}</span><span className="muted">Cần xử lý ngay</span></div></div>
       </div>
 
       <div className="row-between" style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <Link to="/app/admin/parts/new" className="btn btn-primary" style={{ textDecoration: 'none' }}>+ Thêm SKU</Link>
+          <Link to="/app/admin/parts/new" className="btn btn-primary" style={{ textDecoration: 'none' }}>+ Thêm</Link>
           <button type="button" className="btn btn-ghost" onClick={() => openAction('adjust')}>Điều chỉnh tồn</button>
           <button type="button" className="btn btn-ghost" onClick={() => loadData()}>Làm mới</button>
         </div>

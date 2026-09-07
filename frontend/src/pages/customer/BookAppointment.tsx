@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type Booking, type ServiceItem, type Vehicle } from '../../lib/api'
+import { api, type Booking, type RepairOrder, type ServiceItem, type Vehicle } from '../../lib/api'
 import { useToast } from '../../context/ToastContext'
+import { formatStatus } from '../../lib/format'
 
 function formatDateInput(date = new Date()) {
   const local = new Date(date)
@@ -13,6 +14,7 @@ function formatDateInput(date = new Date()) {
 
 export function BookAppointment() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [repairOrders, setRepairOrders] = useState<RepairOrder[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null)
   const [licensePlate, setLicensePlate] = useState('')
   const [brand, setBrand] = useState('')
@@ -51,6 +53,11 @@ export function BookAppointment() {
           applyVehicle(list[0])
         }
       })
+      .catch(() => { })
+
+    api.customer
+      .repairOrders()
+      .then((list) => setRepairOrders(list))
       .catch(() => { })
   }, [])
 
@@ -92,14 +99,42 @@ export function BookAppointment() {
     setTimeSlot('08:00 – 10:00')
   }
 
+  const activeOrderForVehicle = useMemo(() => {
+    const normPlate = licensePlate.trim().toUpperCase()
+    if (!normPlate && !selectedVehicleId) return null
+    return (
+      repairOrders.find((ro) => {
+        const matchVehicle = selectedVehicleId ? ro.vehicleId === selectedVehicleId : false
+        const matchPlate = ro.licensePlate && ro.licensePlate.trim().toUpperCase() === normPlate
+        const isUnfinished = ro.status !== 'DELIVERED' && ro.status !== 'CANCELLED'
+        return (matchVehicle || matchPlate) && isUnfinished
+      }) ?? null
+    )
+  }, [repairOrders, selectedVehicleId, licensePlate])
+
+  const isSameDayConflict = useMemo(() => {
+    if (!activeOrderForVehicle) return false
+    const orderDate = activeOrderForVehicle.createdAt ? activeOrderForVehicle.createdAt.substring(0, 10) : ''
+    const today = formatDateInput()
+    return requestedDate === today || requestedDate === orderDate
+  }, [activeOrderForVehicle, requestedDate])
+
   const canSubmit = useMemo(
-    () => licensePlate.trim().length > 0 && requestedDate.length > 0 && !submittedBooking,
-    [licensePlate, requestedDate, submittedBooking],
+    () => licensePlate.trim().length > 0 && requestedDate.length > 0 && !submittedBooking && !isSameDayConflict,
+    [licensePlate, requestedDate, submittedBooking, isSameDayConflict],
   )
 
   async function submitBooking(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!canSubmit || loading) return
+
+    if (isSameDayConflict) {
+      const msg = `Xe ${activeOrderForVehicle?.licensePlate || licensePlate} hiện đang được xử lý tại xưởng vào ngày này. Để đặt lịch đón tiếp tiếp theo, quý khách vui lòng chọn ngày khác (ví dụ: ngày mai).`
+      setErrorMessage(msg)
+      showToast(msg, 'error')
+      return
+    }
+
     setLoading(true)
     setErrorMessage(null)
     try {
@@ -307,6 +342,36 @@ export function BookAppointment() {
                       >
                         + Nhập xe khác
                       </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Banner thông báo trạng thái xe đang ở xưởng */}
+                {activeOrderForVehicle ? (
+                  <div
+                    style={{
+                      marginBottom: '1.25rem',
+                      padding: '0.85rem 1.1rem',
+                      borderRadius: '12px',
+                      background: isSameDayConflict ? 'rgba(239, 68, 68, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                      border: `1.5px solid ${isSameDayConflict ? '#f87171' : '#60a5fa'}`,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.75rem',
+                    }}
+                  >
+                    <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{isSameDayConflict ? '⚠️' : 'ℹ️'}</span>
+                    <div style={{ fontSize: '0.88rem', lineHeight: 1.45 }}>
+                      <strong style={{ color: isSameDayConflict ? '#b91c1c' : '#1d4ed8' }}>
+                        {isSameDayConflict
+                          ? `Xe ${activeOrderForVehicle.licensePlate} đang có hồ sơ tại xưởng hôm nay (${formatStatus(activeOrderForVehicle.status)})`
+                          : `Xe ${activeOrderForVehicle.licensePlate} hiện đang được xử lý tại xưởng (${formatStatus(activeOrderForVehicle.status)})`}
+                      </strong>
+                      <p style={{ margin: '0.2rem 0 0', color: isSameDayConflict ? '#991b1b' : '#1e40af' }}>
+                        {isSameDayConflict
+                          ? 'Để tránh trùng lặp lịch đón tiếp, nếu quý khách muốn đặt lịch kiểm tra tiếp theo, vui lòng chọn ngày khác (ví dụ: ngày mai).'
+                          : 'Quý khách vẫn có thể đặt trước lịch cho ngày tiếp theo; xưởng sẽ ưu tiên tiếp nhận lịch mới sau khi hoàn tất bàn giao lượt phục vụ hiện tại.'}
+                      </p>
                     </div>
                   </div>
                 ) : null}

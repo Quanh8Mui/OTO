@@ -12,6 +12,8 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
 
   List<Quote> findByRepairOrderIdOrderByVersionDesc(Long repairOrderId);
 
+  List<Quote> findByRepairOrder_IdInOrderByVersionDesc(List<Long> repairOrderIds);
+
   List<Quote> findByRepairOrder_Customer_IdOrderByCreatedAtDesc(Long customerId);
 
   List<Quote> findByRepairOrder_Customer_IdAndStatusInOrderByCreatedAtDesc(

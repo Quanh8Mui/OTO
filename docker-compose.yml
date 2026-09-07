@@ -43,6 +43,11 @@ services:
       CORS_ORIGINS: http://localhost,http://localhost:80,http://localhost:5173
       VNPAY_TMN_CODE: KZDCH6GA
       VNPAY_HASH_SECRET: KZLCWYLAREGFVFWNQOSPGKKVXSYYLGVJ
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-hacamdat2003@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-yvjptzofylpglzqv}
+      MAIL_FROM: ${MAIL_FROM:-hacamdat2003@gmail.com}
     ports:
       - "8080:8080"
     networks:

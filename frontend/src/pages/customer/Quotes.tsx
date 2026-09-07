@@ -7,6 +7,11 @@ export function Quotes() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectType, setRejectType] = useState<'ADJUST' | 'CANCEL_RETURN'>('ADJUST')
+  const [rejectCustomNote, setRejectCustomNote] = useState('')
+  const [rejecting, setRejecting] = useState(false)
+
   useEffect(() => {
     api.customer.quotes().then((data) => {
       setQuotes(data)
@@ -23,11 +28,29 @@ export function Quotes() {
     setMessage('Đã duyệt báo giá.')
   }
 
-  async function reject() {
+  async function confirmReject() {
     if (!selected) return
-    const updated = await api.customer.rejectQuote(selected.id, 'Cần điều chỉnh hạng mục')
-    setQuotes((prev) => prev.map((q) => (q.id === updated.id ? updated : q)))
-    setMessage('Đã từ chối báo giá.')
+    setRejecting(true)
+    try {
+      const reasonLabel =
+        rejectType === 'CANCEL_RETURN'
+          ? `Không đồng ý sửa chữa (Yêu cầu nhận lại xe)${rejectCustomNote.trim() ? `: ${rejectCustomNote.trim()}` : ''}`
+          : `Yêu cầu điều chỉnh lại báo giá${rejectCustomNote.trim() ? `: ${rejectCustomNote.trim()}` : ''}`
+
+      const updated = await api.customer.rejectQuote(selected.id, reasonLabel)
+      setQuotes((prev) => prev.map((q) => (q.id === updated.id ? updated : q)))
+      setShowRejectModal(false)
+      setRejectCustomNote('')
+      setMessage(
+        rejectType === 'CANCEL_RETURN'
+          ? 'Đã gửi yêu cầu từ chối & xin nhận lại xe. Xưởng sẽ làm thủ tục hoàn tất hồ sơ để bàn giao trả xe.'
+          : 'Đã gửi yêu cầu điều chỉnh báo giá tới xưởng.',
+      )
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Không thể gửi phản hồi từ chối')
+    } finally {
+      setRejecting(false)
+    }
   }
 
   function handlePrint() {
@@ -131,8 +154,13 @@ export function Quotes() {
             <button type="button" className="btn btn-ghost" onClick={handlePrint} disabled={!selected}>
               📄 In / Xuất PDF
             </button>
-            <button type="button" className="btn btn-danger" onClick={reject} disabled={!selected || selected.status === 'APPROVED'}>
-              Từ chối & ghi chú
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => setShowRejectModal(true)}
+              disabled={!selected || selected.status === 'APPROVED' || selected.status === 'REJECTED'}
+            >
+              Từ chối & phản hồi
             </button>
           </div>
           <button type="button" className="btn btn-primary" onClick={approve} disabled={!selected || selected.status === 'APPROVED'}>
@@ -158,6 +186,144 @@ export function Quotes() {
           </select>
         </div>
       </div>
+
+      {/* Rejection Options Modal */}
+      {showRejectModal && selected && (
+        <div
+          className="no-print"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: 500,
+              width: '100%',
+              padding: '1.5rem',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25)',
+              borderRadius: '16px',
+            }}
+          >
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.35rem', color: '#111827' }}>
+              Xác nhận từ chối báo giá
+            </h2>
+            <p className="muted" style={{ fontSize: '0.85rem', margin: '0 0 1.25rem' }}>
+              Báo giá <strong>{selected.quoteNumber}</strong> (Lệnh sửa chữa RO #{selected.repairOrderId})
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.65rem',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '10px',
+                  border: `1.5px solid ${rejectType === 'ADJUST' ? '#6366f1' : '#e5e7eb'}`,
+                  background: rejectType === 'ADJUST' ? 'rgba(99, 102, 241, 0.05)' : '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="rejectType"
+                  checked={rejectType === 'ADJUST'}
+                  onChange={() => setRejectType('ADJUST')}
+                  style={{ marginTop: '0.2rem' }}
+                />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1f2937' }}>
+                    🔄 Yêu cầu điều chỉnh lại báo giá (Xe vẫn ở xưởng)
+                  </div>
+                  <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                    Yêu cầu xưởng xem xét giảm bớt hoặc đổi các hạng mục và gửi lại báo giá mới.
+                  </div>
+                </div>
+              </label>
+
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.65rem',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '10px',
+                  border: `1.5px solid ${rejectType === 'CANCEL_RETURN' ? '#ef4444' : '#e5e7eb'}`,
+                  background: rejectType === 'CANCEL_RETURN' ? 'rgba(239, 68, 68, 0.05)' : '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="rejectType"
+                  checked={rejectType === 'CANCEL_RETURN'}
+                  onChange={() => setRejectType('CANCEL_RETURN')}
+                  style={{ marginTop: '0.2rem' }}
+                />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#b91c1c' }}>
+                    🚗 Không sửa chữa — Xin nhận lại xe
+                  </div>
+                  <div className="muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                    Không đồng ý phương án sửa chữa, yêu cầu xưởng hoàn tất hồ sơ để nhận xe về.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                Ghi chú thêm cho cố vấn dịch vụ (tùy chọn):
+              </label>
+              <textarea
+                value={rejectCustomNote}
+                onChange={(e) => setRejectCustomNote(e.target.value)}
+                placeholder={
+                  rejectType === 'CANCEL_RETURN'
+                    ? 'VD: Chi phí vượt ngân sách, tôi xin nhận lại xe vào chiều nay...'
+                    : 'VD: Xin bỏ bớt lọc gió, chỉ thay dầu động cơ giúp tôi...'
+                }
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem 0.75rem',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '0.88rem',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setShowRejectModal(false)}
+                disabled={rejecting}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={confirmReject}
+                disabled={rejecting}
+              >
+                {rejecting ? 'Đang gửi...' : 'Xác nhận từ chối'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Printable Signatures */}
       <div className="print-only">

@@ -31,15 +31,26 @@ export type Booking = {
   id: number
   customerId: number
   customerName: string
+  customerPhone?: string
   bookingNumber: string
   vehicleId: number
   licensePlate: string
+  vehicleLabel?: string
+  serviceCatalogId?: number | null
   serviceName?: string
   serviceTypeLabel?: string
   requestedDate: string
   timeSlot?: string
   notes?: string
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
+  repairOrderId?: number | null
+  repairOrderNumber?: string | null
+  repairOrderStatus?: string | null
+  assignedStaffId?: number | null
+  assignedStaffName?: string | null
+  quoteStatus?: string | null
+  quoteRejectedReason?: string | null
+  createdAt?: string
 }
 
 export type RepairOrder = {
@@ -169,6 +180,15 @@ export type NotificationSetting = {
   channel?: string
   templateSubject?: string
   templateBody?: string
+}
+
+export type SmtpStatus = {
+  configured: boolean
+  host: string
+  port: number
+  username: string
+  fromAddress: string
+  senderName: string
 }
 
 export type StaffSchedule = {
@@ -386,6 +406,12 @@ export const api = {
     notifications: () => request<NotificationSetting[]>('/api/admin/notification-settings'),
     updateNotification: (id: number, payload: { enabled: boolean; channel?: string; templateSubject?: string; templateBody?: string }) =>
       request<NotificationSetting>(`/api/admin/notification-settings/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+    smtpStatus: () => request<SmtpStatus>('/api/admin/notification-settings/smtp-status'),
+    testEmail: (toEmail: string) =>
+      request<{ message: string }>('/api/admin/notification-settings/test-email', {
+        method: 'POST',
+        body: JSON.stringify({ toEmail }),
+      }),
     partsRequests: () => request<Array<{ id: number; requestNumber: string; repairOrderId: number; requestedByStaffId: number; status: 'PENDING' | 'APPROVED' | 'FULFILLED' | 'REJECTED'; adminNote?: string; createdAt: string; fulfilledAt?: string; lines: Array<{ id: number; partId: number; partName: string; partSku: string; quantityRequested: number; quantityIssued: number }> }>>('/api/admin/parts-requests'),
     approvePartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/approve`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
     fulfillPartsRequest: (id: number, adminNote?: string) => request(`/api/admin/parts-requests/${id}/fulfill`, { method: 'POST', body: JSON.stringify({ adminNote }) }),
