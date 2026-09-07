@@ -295,7 +295,6 @@ export function BookAppointment() {
                     gap: '0.75rem',
                   }}
                 >
-                  <span style={{ fontSize: '1.3rem' }}>⚠️</span>
                   <div>
                     <strong>Không thể gửi lịch hẹn:</strong>
                     <div style={{ marginTop: '0.15rem' }}>{errorMessage}</div>

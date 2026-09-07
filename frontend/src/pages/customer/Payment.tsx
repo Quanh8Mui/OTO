@@ -31,10 +31,10 @@ export function Payment() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('vnpaySuccess') === 'true') {
       const ref = params.get('txnRef') || ''
-      setMessage(`🎉 Thanh toán VNPay thành công${ref ? ` cho mã giao dịch ${ref}` : ''}!`)
+      setMessage(`Thanh toán VNPay thành công${ref ? ` cho mã giao dịch ${ref}` : ''}!`)
       window.history.replaceState({}, document.title, window.location.pathname)
     } else if (params.get('vnpayError')) {
-      setMessage(`❌ Giao dịch VNPay không thành công (Mã lỗi: ${params.get('vnpayError')})`)
+      setMessage(` Giao dịch VNPay không thành công (Mã lỗi: ${params.get('vnpayError')})`)
       window.history.replaceState({}, document.title, window.location.pathname)
     }
 
@@ -305,7 +305,6 @@ export function Payment() {
             </div>
           ) : (
             <div className="stack" style={{ padding: '1.5rem 0', alignItems: 'center', textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎉</div>
               <strong style={{ fontSize: '1.05rem', color: '#059669' }}>
                 Tất cả hóa đơn đã được thanh toán đầy đủ!
               </strong>
