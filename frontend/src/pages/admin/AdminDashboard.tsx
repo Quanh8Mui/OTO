@@ -454,7 +454,7 @@ export function AdminDashboard() {
                 }}
               >
                 <option value="ALL">Tất cả nhân viên ({dayBookings.length} đơn)</option>
-                <option value="UNASSIGNED">⚠️ Chưa phân công KTV</option>
+                <option value="UNASSIGNED">Chưa phân công KTV</option>
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
                     {emp.fullName} ({emp.position || 'Kỹ thuật viên'})
@@ -509,7 +509,7 @@ export function AdminDashboard() {
                   }}
                   onClick={() => setStatusFilter('REJECTED')}
                 >
-                  ⚠️ Từ chối ({rejectedCount})
+                  Từ chối ({rejectedCount})
                 </button>
               )}
             </div>

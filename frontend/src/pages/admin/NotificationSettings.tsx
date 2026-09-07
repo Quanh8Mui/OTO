@@ -248,7 +248,7 @@ export function NotificationSettings() {
               lineHeight: 1.6,
             }}
           >
-            <strong>💡 Cách cấu hình gửi bằng Gmail (Miễn phí 500 email/ngày):</strong>
+            <strong>Cách cấu hình gửi bằng Gmail (Miễn phí 500 email/ngày):</strong>
             <ol style={{ margin: '0.4rem 0 0', paddingLeft: '1.2rem' }}>
               <li>Bật <strong>Xác minh 2 bước</strong> cho tài khoản Google của bạn.</li>
               <li>Vào <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: '#533c6e', textDecoration: 'underline', fontWeight: 600 }}>Google App Passwords</a> để tạo mật khẩu ứng dụng 16 ký tự.</li>

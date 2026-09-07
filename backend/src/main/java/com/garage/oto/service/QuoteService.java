@@ -173,7 +173,19 @@ public class QuoteService {
     q.setSentAt(Instant.now());
     RepairOrder ro = q.getRepairOrder();
     ro.setStatus(RepairOrderStatus.AWAITING_APPROVAL);
-    emailService.sendQuoteReadyEmail(q);
+
+    String customerEmail = ro.getCustomer() != null ? ro.getCustomer().getEmail() : null;
+    String customerName = ro.getCustomer() != null ? ro.getCustomer().getFullName() : "Quý khách";
+    String licensePlate = ro.getVehicle() != null ? ro.getVehicle().getLicensePlate() : "";
+
+    emailService.sendQuoteReadyEmail(
+        customerEmail,
+        customerName,
+        licensePlate,
+        q.getQuoteNumber(),
+        q.getGrandTotal(),
+        q.getLaborTotal(),
+        q.getPartsTotal());
     return toResponse(q);
   }
 

@@ -107,25 +107,25 @@ public class EmailService {
    * Triggered when booking is confirmed or created.
    */
   @Async
-  public void sendBookingConfirmedEmail(Booking booking) {
+  public void sendBookingConfirmedEmail(
+      String customerEmail,
+      String customerName,
+      String licensePlate,
+      String vehicleModel,
+      String serviceName,
+      String bookingNumber,
+      String dateStr,
+      String timeSlot) {
     if (!isEventEmailEnabled("BOOKING_CONFIRMED")) {
-      log.info("Email notification for BOOKING_CONFIRMED is disabled, skipping for booking: {}", booking.getBookingNumber());
+      log.info("Email notification for BOOKING_CONFIRMED is disabled, skipping for booking: {}", bookingNumber);
       return;
     }
-    if (booking.getCustomer() == null || booking.getCustomer().getEmail() == null || booking.getCustomer().getEmail().isBlank()) {
-      log.warn("Customer email is missing for booking {}", booking.getBookingNumber());
+    if (customerEmail == null || customerEmail.isBlank()) {
+      log.warn("Customer email is missing for booking {}", bookingNumber);
       return;
     }
 
-    String customerEmail = booking.getCustomer().getEmail();
-    String customerName = booking.getCustomer().getFullName();
-    String licensePlate = booking.getVehicle() != null ? booking.getVehicle().getLicensePlate() : "Chưa rõ";
-    String vehicleModel = booking.getVehicle() != null ? (booking.getVehicle().getBrand() + " " + booking.getVehicle().getModel()) : "";
-    String serviceName = booking.getServiceCatalog() != null ? booking.getServiceCatalog().getName() : (booking.getServiceTypeLabel() != null ? booking.getServiceTypeLabel() : (booking.getNotes() != null ? booking.getNotes() : "Bảo dưỡng - Sửa chữa"));
-    String dateStr = booking.getRequestedDate() != null ? booking.getRequestedDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
-    String timeSlot = booking.getTimeSlot() != null ? booking.getTimeSlot() : "Giờ hành chính";
-
-    String subject = String.format("[OTO Garage] Xác nhận lịch hẹn dịch vụ xe %s - Mã: %s", licensePlate, booking.getBookingNumber());
+    String subject = String.format("[OTO Garage] Xác nhận lịch hẹn dịch vụ xe %s - Mã: %s", licensePlate, bookingNumber);
 
     String body = String.format(
         "<p>Kính gửi Quý khách <strong>%s</strong>,</p>"
@@ -140,7 +140,7 @@ public class EmailService {
             + "</table>"
             + "</div>"
             + "<p>Quý khách vui lòng mang xe đến xưởng đúng giờ hẹn để kỹ thuật viên kiểm tra và chăm sóc chu đáo nhất.</p>",
-        customerName, booking.getBookingNumber(), licensePlate, vehicleModel, dateStr, timeSlot, serviceName
+        customerName, bookingNumber, licensePlate, vehicleModel, dateStr, timeSlot, serviceName
     );
 
     String html = buildEmailShell("Xác nhận lịch hẹn dịch vụ", body);
@@ -151,26 +151,29 @@ public class EmailService {
    * Triggered when a quote is prepared and sent to customer.
    */
   @Async
-  public void sendQuoteReadyEmail(Quote quote) {
+  public void sendQuoteReadyEmail(
+      String customerEmail,
+      String customerName,
+      String licensePlate,
+      String quoteNumber,
+      java.math.BigDecimal grandTotal,
+      java.math.BigDecimal laborTotal,
+      java.math.BigDecimal partsTotal) {
     if (!isEventEmailEnabled("QUOTE_READY")) {
-      log.info("Email notification for QUOTE_READY is disabled, skipping for quote: {}", quote.getQuoteNumber());
+      log.info("Email notification for QUOTE_READY is disabled, skipping for quote: {}", quoteNumber);
       return;
     }
 
-    RepairOrder ro = quote.getRepairOrder();
-    if (ro == null || ro.getCustomer() == null || ro.getCustomer().getEmail() == null || ro.getCustomer().getEmail().isBlank()) {
-      log.warn("Customer email is missing for quote {}", quote.getQuoteNumber());
+    if (customerEmail == null || customerEmail.isBlank()) {
+      log.warn("Customer email is missing for quote {}", quoteNumber);
       return;
     }
 
-    String customerEmail = ro.getCustomer().getEmail();
-    String customerName = ro.getCustomer().getFullName();
-    String licensePlate = ro.getVehicle() != null ? ro.getVehicle().getLicensePlate() : "Xe của bạn";
-    String totalMoney = CURRENCY_FORMAT.format(quote.getGrandTotal() != null ? quote.getGrandTotal() : 0);
-    String laborMoney = CURRENCY_FORMAT.format(quote.getLaborTotal() != null ? quote.getLaborTotal() : 0);
-    String partsMoney = CURRENCY_FORMAT.format(quote.getPartsTotal() != null ? quote.getPartsTotal() : 0);
+    String totalMoney = CURRENCY_FORMAT.format(grandTotal != null ? grandTotal : 0);
+    String laborMoney = CURRENCY_FORMAT.format(laborTotal != null ? laborTotal : 0);
+    String partsMoney = CURRENCY_FORMAT.format(partsTotal != null ? partsTotal : 0);
 
-    String subject = String.format("[OTO Garage] Báo giá dịch vụ xe %s đã sẵn sàng - Mã: %s", licensePlate, quote.getQuoteNumber());
+    String subject = String.format("[OTO Garage] Báo giá dịch vụ xe %s đã sẵn sàng - Mã: %s", licensePlate, quoteNumber);
 
     String body = String.format(
         "<p>Kính gửi Quý khách <strong>%s</strong>,</p>"
@@ -184,7 +187,7 @@ public class EmailService {
             + "</table>"
             + "</div>"
             + "<p>Quý khách vui lòng đăng nhập vào tài khoản khách hàng để xem chi tiết từng hạng mục và bấm xác nhận duyệt báo giá để xưởng bắt đầu thực hiện.</p>",
-        customerName, licensePlate, quote.getQuoteNumber(), laborMoney, partsMoney, totalMoney
+        customerName, licensePlate, quoteNumber, laborMoney, partsMoney, totalMoney
     );
 
     String html = buildEmailShell("Báo giá dịch vụ đã sẵn sàng", body);
@@ -195,20 +198,23 @@ public class EmailService {
    * Triggered when repair progress changes.
    */
   @Async
-  public void sendRepairProgressEmail(RepairOrder ro, RepairProgressEvent event) {
+  public void sendRepairProgressEmail(
+      String customerEmail,
+      String customerName,
+      String licensePlate,
+      String orderNumber,
+      String stepLabel,
+      String message) {
     if (!isEventEmailEnabled("REPAIR_STATUS")) {
       return;
     }
 
-    if (ro == null || ro.getCustomer() == null || ro.getCustomer().getEmail() == null || ro.getCustomer().getEmail().isBlank()) {
+    if (customerEmail == null || customerEmail.isBlank()) {
       return;
     }
 
-    String customerEmail = ro.getCustomer().getEmail();
-    String customerName = ro.getCustomer().getFullName();
-    String licensePlate = ro.getVehicle() != null ? ro.getVehicle().getLicensePlate() : "Xe của bạn";
-    String title = event != null && event.getStepLabel() != null ? event.getStepLabel() : "Cập nhật tiến độ sửa chữa";
-    String note = event != null && event.getMessage() != null ? event.getMessage() : "Kỹ thuật viên đang tiếp tục công việc tại xưởng.";
+    String title = (stepLabel != null && !stepLabel.isBlank()) ? stepLabel : "Cập nhật tiến độ sửa chữa";
+    String note = (message != null && !message.isBlank()) ? message : "Kỹ thuật viên đang tiếp tục công việc tại xưởng.";
 
     String subject = String.format("[OTO Garage] Tiến độ sửa chữa xe %s: %s", licensePlate, title);
 
@@ -220,7 +226,7 @@ public class EmailService {
             + "<p style=\"margin: 0; color: #282033; line-height: 1.5;\">%s</p>"
             + "</div>"
             + "<p>Quý khách có thể truy cập hệ thống để xem nhật ký ảnh và mốc thời gian chi tiết.</p>",
-        customerName, licensePlate, ro.getOrderNumber(), title, note
+        customerName, licensePlate, orderNumber, title, note
     );
 
     String html = buildEmailShell("Cập nhật tiến độ sửa chữa", body);

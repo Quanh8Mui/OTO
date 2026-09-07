@@ -165,7 +165,12 @@ public class RepairOrderService {
     e.setStepLabel(stepLabel);
     e.setCreatedBy(actor);
     progressEventRepository.save(e);
-    emailService.sendRepairProgressEmail(ro, e);
+
+    String customerEmail = ro.getCustomer() != null ? ro.getCustomer().getEmail() : null;
+    String customerName = ro.getCustomer() != null ? ro.getCustomer().getFullName() : "Quý khách";
+    String licensePlate = ro.getVehicle() != null ? ro.getVehicle().getLicensePlate() : "";
+
+    emailService.sendRepairProgressEmail(customerEmail, customerName, licensePlate, ro.getOrderNumber(), stepLabel, message);
   }
 
   @Transactional(readOnly = true)

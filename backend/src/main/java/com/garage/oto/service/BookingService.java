@@ -119,7 +119,16 @@ public class BookingService {
     b.setNotes(req.notes());
     b.setStatus(BookingStatus.PENDING);
     bookingRepository.save(b);
-    emailService.sendBookingConfirmedEmail(b);
+
+    String customerEmail = customer != null ? customer.getEmail() : null;
+    String customerName = customer != null ? customer.getFullName() : "Quý khách";
+    String licensePlate = v != null ? v.getLicensePlate() : "";
+    String vehicleModel = v != null ? ((v.getBrand() != null ? v.getBrand() : "") + " " + (v.getModel() != null ? v.getModel() : "")).trim() : "";
+    String serviceName = catalog != null ? catalog.getName() : (b.getServiceTypeLabel() != null ? b.getServiceTypeLabel() : "Bảo dưỡng chung");
+    String dateStr = b.getRequestedDate() != null ? b.getRequestedDate().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
+    String timeSlot = b.getTimeSlot() != null ? b.getTimeSlot() : "";
+
+    emailService.sendBookingConfirmedEmail(customerEmail, customerName, licensePlate, vehicleModel, serviceName, b.getBookingNumber(), dateStr, timeSlot);
     return toResponse(b, null, null);
   }
 
